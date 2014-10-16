@@ -34,7 +34,7 @@ class LoginModel
             return false;
         }
         // get user's data
-        $query = "  SELECT  id, name
+        $sql = "  SELECT  id, name
                     FROM    user
                     WHERE   name = :user_name";
        
@@ -49,7 +49,8 @@ class LoginModel
         }
         else
         {
-            $this->do_login();
+            $query_result = $query->fetch();
+            $this->do_login($query_result->id, $query_result->name);
             return true;
         }
         return false;
@@ -81,7 +82,7 @@ class LoginModel
      * handles the entire login process and creates a new user in the database if everything is fine
      * @return boolean Gives back the success status of the registration
      */
-    public function registerNewUser()
+    private function registerNewUser()
     {
         $regex = "/^[a-z\d]{2,45}$/i";
         // perform all necessary form checks
@@ -97,7 +98,6 @@ class LoginModel
         }
         // clean the input
         $user_name = strip_tags($_POST['user_name']);
-        $user_email = strip_tags($_POST['user_email']);
 
          // check if username already in use (logged)
         $query = $this->db->prepare("SELECT connected FROM user WHERE name = :user_name");
@@ -123,18 +123,21 @@ class LoginModel
         }
         else
         {
-            $this->do_login();
+            $query = $this->db->prepare("SELECT id FROM user WHERE name = :user_name");
+            $query->execute(array(':user_name' => $user_name));
+            $query_result = $query->fetch();
+            $user_id->$query_result->id;
+            $this->do_login($user_id, $user_name);
             return true;
         }
         //default return
         return false;
     }
 
-    private function do_login()
+    private function do_login($user_id, $user_name)
     {
-        $sql = "UPDATE user SET connected = true WHERE id = " . Session::get('user_id');
+        $sql = "UPDATE user SET connected = true WHERE id = " . $user_id;
         $this->db->query($sql);
-        $user_result_row = $query->fetch();
-        $this->setSession($user_result_row->id, $user_result_row->name);
+        $this->setSession($user_id, $user_name);
     }
 }

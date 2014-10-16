@@ -1,9 +1,9 @@
-<form>
+<form action="<?php echo URL;?>index/login" method="post">
 	<p>
-		<label for="user_name">Pseudo :</label>
-		<input type="text" id="user_name" /><br />
+		<label >Pseudo :</label>
+		<input type="text" name="user_name" required/><br />
 	</p>
 	<p>
-		<input type="button" onclick="" value="Go" />
+		<input type="submit" value="Valider" />
 	</p>
 </form>

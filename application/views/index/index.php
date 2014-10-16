@@ -8,12 +8,12 @@
         <p align="justify">Projet réalisé avec PHP, CSS, javascript et le concept AJAX</p>
 
         <?php 
-            if(Session::get('user_logged_in'))
-            {
-                echo "<a href=\"" . URL . "game/index\">Jouer</a>";
-            }else{
-                include("login.php");
-            }
+        if(Session::get('user_logged_in'))
+        {
+            echo "<a href=\"" . URL . "game/index\">Jouer</a>";
+        }else{
+            include("login.php");
+        }
         ?>
     </article>
 </div>

@@ -37,6 +37,14 @@
                 <li>
                     <a href="<?php echo URL; ?>score/index">High Scores</a></li>
                 </li>
+                <?php 
+                if(Session::get('user_logged_in'))
+                {
+                    echo "
+                    <li>
+                        <a href=\"".URL."index/logout\">Se déconnecter</a></li>
+                    </li>";
+                }?>
             </ul>
         </div>
         <!-- Beginning of the "body" of the current page -->
