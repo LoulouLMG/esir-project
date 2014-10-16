@@ -10,9 +10,9 @@
         <?php 
             if(Session::get('user_logged_in'))
             {
-                include('login.php');
-            }else{
                 echo "<a href=\"" . URL . "game/index\">Jouer</a>";
+            }else{
+                include("login.php");
             }
         ?>
     </article>
