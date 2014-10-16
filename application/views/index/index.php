@@ -5,11 +5,15 @@
         <?php $this->renderFeedbackMessages(); ?>
 
         <!-- Texte aléatoire useless pour test -->
-        <p align="justify">Auxerunt haec vulgi sordidioris audaciam, quod cum ingravesceret penuria commeatuum, famis et furoris 
-            inpulsu Eubuli cuiusdam inter suos clari domum ambitiosam ignibus subditis inflammavit rectoremque ut sibi 
-            iudicio imperiali addictum calcibus incessens et pugnis conculcans seminecem laniatu miserando discerpsit. 
-            post cuius lacrimosum interitum in unius exitio quisque imaginem periculi sui considerans documento recenti 
-            similia formidabat.
-        </p>
+        <p align="justify">Projet réalisé avec PHP, CSS, javascript et le concept AJAX</p>
+
+        <?php 
+            if(Session::get('user_logged_in'))
+            {
+                include('login.php');
+            }else{
+                echo "<a href=\"" . URL . "game/index\">Jouer</a>";
+            }
+        ?>
     </article>
 </div>

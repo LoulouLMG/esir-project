@@ -15,6 +15,14 @@
 <body>
     <div class="debug-helper-box">
         DEBUG HELPER:
+        <?php 
+            if(Session::get('user_logged_in'))
+            {
+                echo "connecte en tant que : " . Session::get('user_name');
+            }else{
+                echo "non connecte";
+            }
+        ?>
     </div>
     <div id ="wrap">
         <div id = "top">
