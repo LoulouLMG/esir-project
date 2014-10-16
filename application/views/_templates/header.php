@@ -27,7 +27,7 @@
                     <a href="<?php echo URL; ?>index/index">Accueil</a>
                 </li>
                 <li>
-                    <a href="<?php echo URL; ?>score/index">High Scores</a></li>"; 
+                    <a href="<?php echo URL; ?>score/index">High Scores</a></li>
                 </li>
             </ul>
         </div>
