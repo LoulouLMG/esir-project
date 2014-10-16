@@ -6,21 +6,20 @@
     <title>Projet ESIR</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <link rel="stylesheet" type="text/css" href="<?php echo URL;?>public/css/reset.css"/>
+
     <link rel="stylesheet" type="text/css" href="<?php echo URL;?>public/css/style.css"/>
     
     <script type="text/javascript" src="<?php echo URL;?>public/js/application.js"></script>
 </head>
 <body>
     <div class="debug-helper-box">
-        DEBUG HELPER:
+        DEBUG HELPER :</br>
         <?php 
             if(Session::get('user_logged_in'))
             {
-                echo "connecte en tant que : " . Session::get('user_name');
+                echo "- Connecté en tant que : " . Session::get('user_name');
             }else{
-                echo "non connecte";
+                echo "- Non connecté";
             }
         ?>
     </div>
