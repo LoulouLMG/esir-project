@@ -126,7 +126,7 @@ class LoginModel
             $query = $this->db->prepare("SELECT id FROM user WHERE name = :user_name");
             $query->execute(array(':user_name' => $user_name));
             $query_result = $query->fetch();
-            $user_id->$query_result->id;
+            $user_id = $query_result->id;
             $this->do_login($user_id, $user_name);
             return true;
         }
