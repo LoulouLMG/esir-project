@@ -1,0 +1,1 @@
+le dossier views contiendra les vues affichées par le navigateur

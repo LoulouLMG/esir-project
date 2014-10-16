@@ -1,0 +1,1 @@
+le dossier models va contenir tous les modeles. Ceux ci feront le lien avec la base de donnée (ils réaliseront les requetes).

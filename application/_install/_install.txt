@@ -1,0 +1,1 @@
+le dossier _install va contenir tous les fichiers .sql qui vont servir à initialiser la base de donnée
