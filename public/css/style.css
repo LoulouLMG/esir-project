@@ -1,3 +1,8 @@
+.clr{
+    clear:both;
+    font-size:0;
+}
+
 html {
  overflow-y: scroll;
 }
@@ -26,11 +31,6 @@ p {
   margin-bottom: 10px;
 }
 
-ol, ul {
-    list-style: none;
-}
-
-
 .feedback {
   border: 1px solid black;
   color: black;
@@ -48,14 +48,17 @@ ol, ul {
 }
 
 /* Begin Navigation Bar Styling */
-
 #nav-bar {
- width: 70%;
- float: left;
  background-color: #f2f2f2;
  border-bottom: 1px solid #ccc; 
- border-top: 1px solid #ccc; 
- border-radius: 4px;
+ border-top: 1px solid #ccc;
+ padding-left: 10%;  
+}
+
+#nav-bar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 #nav-bar li {
@@ -65,9 +68,12 @@ ol, ul {
 #nav-bar li a {
  display: block;
  text-decoration: none;
- font-weight: bold;
+ font-weight: 600;
+ font-size: 1.5em;
  color: #069;
  border-right: 1px solid #ccc; 
+ padding-right: 5px;
+ padding-left: 5px;
 }
 
 #nav-bar li a:hover {
@@ -76,32 +82,29 @@ ol, ul {
 }
 /* End navigation bar styling. */
 
-
 .title-box {
- text-decoration: none;
- font-size: 1.5em;
+ font-size: 3em;
  color: #fff;
  background-color: #069;
- margin: 0; 
- font-weight: 700;
+ font-weight: bold;
+ padding-left: 10%; 
 }
 
 .title-box a {
-  color: #fff;
   text-decoration: none;
+  color: #fff;
 }
 
 #page {
-  width: 70%;
+  width: 80%;
   float: left;
-/*
-margin-left: 10px;
-margin-top: 10px;
-padding-top: 10px;
-padding-bottom: 20px;*/
-box-shadow: 0px 0px 20px 3px #d3d3d3;
-border-radius: 4px;
-background-color: #ffffff;
+  margin-left: 10%;
+  margin-top: 10px;
+  padding-top: 10px;
+  padding-bottom: 20px;
+  box-shadow: 0px 0px 20px 3px #d3d3d3;
+  border-radius: 4px;
+  background-color: #ffffff;
 }
 
 
@@ -125,7 +128,8 @@ background-color: #ffffff;
 
 
 .footer {
-  width: 70%;
+  margin-left: 10%;
+  width: 80%;
   color: #f5f5f5;
   font-size: 11px;
   text-align: center;

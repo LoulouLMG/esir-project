@@ -96,6 +96,10 @@ class LoginModel
         {
             $_SESSION["feedback_negative"][] = FEEDBACK_USERNAME_DOES_NOT_FIT_PATTERN;
         }
+        if(Session::get("feedback_negative")!==null)
+        {
+            return false;
+        }
         // clean the input
         $user_name = strip_tags($_POST['user_name']);
 

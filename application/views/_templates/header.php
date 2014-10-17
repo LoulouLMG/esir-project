@@ -15,12 +15,12 @@
     <div class="debug-helper-box">
         DEBUG HELPER :</br>
         <?php 
-            if(Session::get('user_logged_in'))
-            {
-                echo "- Connecté en tant que : " . Session::get('user_name');
-            }else{
-                echo "- Non connecté";
-            }
+        if(Session::get('user_logged_in'))
+        {
+            echo "- Connecté en tant que : " . Session::get('user_name');
+        }else{
+            echo "- Non connecté";
+        }
         ?>
     </div>
     <div id ="wrap">
@@ -28,23 +28,25 @@
             <div class='title-box'>
                 <a href="<?php echo URL; ?>">Projet Esir</a>
             </div>
-
-            <ul id="nav-bar">
-                <li>
-                    <a href="<?php echo URL; ?>index/index">Accueil</a>
-                </li>
-                <li>
-                    <a href="<?php echo URL; ?>score/index">High Scores</a></li>
-                </li>
-                <?php 
-                if(Session::get('user_logged_in'))
-                {
-                    echo "
+            <div id="nav-bar">
+                <ul>
                     <li>
+                        <a href="<?php echo URL; ?>index/index">Accueil</a>
+                    </li>
+                    <li>
+                        <a href="<?php echo URL; ?>score/index">High Scores</a></li>
+                    </li>
+                    <?php 
+                    if(Session::get('user_logged_in'))
+                    {
+                        echo "
+                        <li>
                         <a href=\"".URL."index/logout\">Se déconnecter</a></li>
-                    </li>";
-                }?>
-            </ul>
+                        </li>";
+                    }?>
+                </ul>
+                <div class="clr"></div>
+            </div>
         </div>
         <!-- Beginning of the "body" of the current page -->
         <div id ="page">
