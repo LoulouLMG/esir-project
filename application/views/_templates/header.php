@@ -40,7 +40,7 @@
                     if(Session::get('user_logged_in'))
                     {
                         echo "
-                        <li>
+                        <li style=\"float: right; margin-right: 11%;\">
                         <a href=\"".URL."index/logout\">Se déconnecter</a></li>
                         </li>";
                     }?>

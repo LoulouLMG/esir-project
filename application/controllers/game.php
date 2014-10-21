@@ -17,4 +17,11 @@ class Game extends Controller
     {
             $this->view->render('game/index');
     }
+
+    function game()
+    {
+    	//TODO: model de connexion à la base de donnée
+    	//TODO: une fois db gérée, header vers game/game
+    		$this->view->render('game/game');
+    }
 }
