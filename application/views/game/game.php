@@ -5,7 +5,8 @@
         <?php $this->renderFeedbackMessages(); ?>
 
         <!-- grille du jeux -->
-        <canvas id="canvas" width="400" height="400"></canvas>
+        <canvas id="canvas" width="600" height="600"></canvas>
+        <span id="timer"></span>
         
         <!-- librairie -->
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
