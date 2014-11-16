@@ -24,4 +24,9 @@ class Game extends Controller
     	//TODO: une fois db gérée, header vers game/game
     		$this->view->render('game/game');
     }
+
+    function multiplayer()
+    {
+        $this->view->render('game/gameMultiplayer');
+    }
 }

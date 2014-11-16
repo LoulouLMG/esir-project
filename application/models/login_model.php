@@ -145,3 +145,4 @@ class LoginModel
         $this->setSession($user_id, $user_name);
     }
 }
+?>

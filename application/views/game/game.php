@@ -1,5 +1,5 @@
 <div class="content">
-    <h1>Jeu</h1>
+    <h1>Partie solo</h1>
     <article>
         <!-- echo out the system feedback (error and success messages) -->
         <?php $this->renderFeedbackMessages(); ?>

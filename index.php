@@ -16,3 +16,4 @@ require 'application/config/autoload.php';
 
 // Start the application
 $app = new Application();
+?>
