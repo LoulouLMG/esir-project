@@ -27,7 +27,7 @@ io.sockets.on('connection', function (socket) {
     notifyInitEverybody(data);
   });
   socket.on('ready', function (data) {
-    console.log('recu', data);
+    console.log('ready', data);
     notifyReadyEverybody(data);
   });
   socket.on('disconnect', function() {
@@ -88,3 +88,24 @@ function notifyLeaveEverybody(parti)
   }
 }
 
+function notifyReadyEverybody(namePlayerReady)
+{
+  notifyOther(namePlayerReady,sendReady);
+}
+
+function sendReady(ready,dest)
+{
+  console.log('notifying',dest,' player ready is' , ready);
+  var sock = playerSocket[dest];
+  sock.emit('ready',ready);
+}
+
+function notifyOther(namePlayer,callback)
+{
+  for(player in playerSocket)
+  {
+    if (player !== namePlayer) {
+      callback(namePlayer,player);
+    }
+  }
+}

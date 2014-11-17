@@ -24,7 +24,7 @@ $(document).ready(function(){
 	var time_over = false;
 	//Lets create the eater now
 	var eater_array; //an array of cells to make up the eater
-	var players_vector = [];
+	var players_map = {};
 
 	initgame();
 	
@@ -34,7 +34,7 @@ $(document).ready(function(){
 		playerCtx.strokeStyle = "black";
 		playerCtx.strokeRect(0, 0, 200, 200);
 		var moi = {name:player_name_current, isReady:false, pos:[]};
-		players_vector.push(moi);
+		players_map[moi.name] = moi;
 		drawPlayerNames();
 
 		//variable globale définis dans le php
@@ -43,13 +43,18 @@ $(document).ready(function(){
 			var player = new Object();
 			player.name = data;
 			player.isReady = false;
-			players_vector.push(player);
+			players_map[data] = player;
 			drawPlayerNames();
   		});
 		socket.on('leave', function (data) {
 			removePlayer(data);
 			drawPlayerNames();
   		});
+		socket.on('ready', function (data) {
+			setPlayerReady(data);
+			drawPlayerNames();
+  		});
+  		document.getElementById("button_ready").onclick = playerReady;
 		waitPlayer();
 	}
 
@@ -62,24 +67,25 @@ $(document).ready(function(){
 		game_loop = setInterval(waitPlayer, 60);		
 	}
 
+	function playerReady()
+	{
+		var moi = players_map[player_name_current];
+		moi.isReady = true;
+		socket.emit('ready',moi.name);
+		drawPlayerNames();
+	}
+
 	function removePlayer(data)
 	{
-		var posPlayer = -1;
-		for(i = 0 ; i < players_vector.length ; i++)
+		delete players_map[data];
+	}
+
+	function setPlayerReady(name)
+	{
+		var current = players_map[name];
+		if(current !== undefined)
 		{
-			if(players_vector[i].name === data)
-			{
-				posPlayer = i;
-				break;
-			}
-		}
-		if(posPlayer > -1)
-		{
-			players_vector.splice(posPlayer,1);
-		}
-		else
-		{
-			alert("pas trouve");
+			current.isReady = true;
 		}
 	}
 
@@ -88,10 +94,17 @@ $(document).ready(function(){
 		playerCtx.clearRect(2, 2, width_playerCanvas-4, high_playerCanvas-4);
 		var pos_name_x = 10;
 		var pos_name_y = 10;
-		for(i = 0 ; i < players_vector.length ; i++)
+		for(pname in players_map)
 		{
-			playerCtx.fillText(players_vector[i].name, pos_name_x, pos_name_y);
+			var player = players_map[pname];
+			if(player.isReady)
+			{
+				playerCtx.fillStyle = 'green';
+			}
+			playerCtx.fillText(player.name, pos_name_x, pos_name_y);
 			pos_name_y += 20;
+			//Pour ne plus ecrire en vert le prochain coup
+			playerCtx.fillStyle = 'black';
 		}
 	}
 
