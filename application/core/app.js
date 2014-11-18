@@ -7,7 +7,7 @@ var playerSocket = {};
 app.listen(8090);
 
 function handler (req, res) {
-  fs.window.location("http://esir-project/");
+  fs.window.location("<?php echo URL?>");
 }
 
 io.sockets.on('connection', function (socket) {
