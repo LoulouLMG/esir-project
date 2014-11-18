@@ -15,13 +15,14 @@
 
         <button id="button_ready">Ready</button>
 
+
         <script type="text/javascript" id="user">
             player_name_current = <?php echo '"'.Session::get('user_name').'"'; ?>;
         </script>
 
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
         <script id="socket">
-            socket = io.connect(<?php echo '"' . URL . PORT_SOCKET .'"' ;?>);
+            socket = io.connect("http://esir-project:8090");
         </script>
 
 		 

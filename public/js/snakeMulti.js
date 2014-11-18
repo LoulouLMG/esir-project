@@ -14,7 +14,7 @@ $(document).ready(function(){
 	//Lets save the cell width in a variable for easy control
 	var cell_size_px = 20;
 	var direction;
-	var token = [];
+	var token = {};
 	var nb_token = 15;
 	var game_over_status = false;
 	var score;
@@ -25,6 +25,8 @@ $(document).ready(function(){
 	//Lets create the eater now
 	var eater_array; //an array of cells to make up the eater
 	var players_map = {};
+	var player_pos;
+	var player_color;
 
 	initgame();
 	
@@ -33,7 +35,7 @@ $(document).ready(function(){
 		empty_canvas();
 		playerCtx.strokeStyle = "black";
 		playerCtx.strokeRect(0, 0, 200, 200);
-		var moi = {name:player_name_current, isReady:false, pos:[]};
+		var moi = {name:player_name_current, isReady:false};
 		players_map[moi.name] = moi;
 		drawPlayerNames();
 
@@ -53,6 +55,12 @@ $(document).ready(function(){
 		socket.on('ready', function (data) {
 			setPlayerReady(data);
 			drawPlayerNames();
+  		});
+  		socket.on('begin', function (data) {
+  			token = data.map;
+  			player_color = data.color;
+  			player_pos = data.pos;
+  			init();
   		});
   		document.getElementById("button_ready").onclick = playerReady;
 		waitPlayer();
@@ -114,10 +122,18 @@ $(document).ready(function(){
 		var counter = setInterval(timer,1000);
 		timer();
 		if(!game_over_status && !time_over) {
-			direction = "right"; //default direction
+			if(player_pos[0] === 0)
+			{
+				direction = "right";
+			}
+			else
+			{
+				direction = "left";
+			}
+
 			create_eater();
-			init_token(); //Now we can see the token particle
-			//finally lets display the score
+
+			//Display the score
 			score = 0;
 			
 			//Lets move the eater now using a timer which will trigger the paint function
@@ -157,10 +173,12 @@ $(document).ready(function(){
 	//Create the eater
 	function create_eater()
 	{
-		var length = 1; //Length of the eater
-		eater_array = []; //Empty array to start with
-		//This will create an eater starting from the top left
-		eater_array.push({x: 0, y:0});
+		//Length of the eater
+		var length = 1; 
+		//The array eater
+		eater_array = [];
+		//This will create an eater
+		eater_array.push({x: player_pos[0], y:player_pos[1]});
 	}
 	
 	//Create the first tokens
@@ -189,7 +207,6 @@ $(document).ready(function(){
 	//Clear the canvas
 	function delete_canvas()
 	{
-		//Clear the canvas
 		ctx.clearRect(0,0,width_canvas,high_canvas);
 	}
 	
@@ -202,7 +219,7 @@ $(document).ready(function(){
 		ctx.strokeRect(0, 0, width_canvas, high_canvas);
 	}
 
-	//Define the type of the new token (basic, rare, mgaic) and its value
+	//Define the type of the new token (basic, rare, magic) and its value
 	function define_token_type()
 	{
 		var value;
@@ -222,8 +239,7 @@ $(document).ready(function(){
 	//Paint the canvas
 	function paint()
 	{
-		//To avoid the eater trail we need to paint the BG on every frame
-		//Lets paint the canvas now
+		//Paint the canvas
 
 		empty_canvas();
 		
@@ -285,23 +301,23 @@ $(document).ready(function(){
 			tail.x = nx; tail.y = ny;
 		}
 
-		//The eater can now eat the food.
 		
 		eater_array.unshift(tail); //puts back the tail as the first cell
 		
 		for(var i = 0; i < eater_array.length; i++)
 		{
 			var c = eater_array[i];
-			//Lets paint 10px wide cells
+			//Paint the cells
 			paint_eater_cell(c.x, c.y);
 		}
 		
-		//Lets paint the token
-		for(var i = 0; i < token.length; i++){
-			paint_cell(token[i].x, token[i].y,token[i].value);
-		}
+
+		//Paint the tokens
+		paintToken();
+
 		//Lets paint the score
 		var score_text = "Score: " + score;
+		ctx.fillText(direction, 500, 500);
 		ctx.fillText(score_text, 5, high_canvas-5);
 	}
 
@@ -313,6 +329,13 @@ $(document).ready(function(){
 		init();
 	}
 
+	function paintToken()
+	{
+		for(tok in token)
+		{
+			paint_cell(token[tok].x, token[tok].y,token[tok].value);
+		}
+	}
 	
 	//Paint the cell in function of their value
 	function paint_cell(x, y, value)
@@ -338,20 +361,10 @@ $(document).ready(function(){
 
 	function paint_eater_cell(x, y)
 	{
-		ctx.fillStyle = "black";
+		ctx.fillStyle = player_color;
 		ctx.fillRect(x*cell_size_px, y*cell_size_px, cell_size_px, cell_size_px);
-		//draw_dwarf(x, y);
 		ctx.strokeStyle = "white";
 		ctx.strokeRect(x*cell_size_px, y*cell_size_px, cell_size_px, cell_size_px);
-	}
-
-	function draw_dwarf(x, y)
-	{
-		dwarf_image = new Image();
-		dwarf_image.onload = function(){
-			ctx.drawImage(dwarf_image, x, y);
-		};
-		dwarf_image.src = 'pacman.png';
 	}
 	
 	function check_collision(x, y, array)
