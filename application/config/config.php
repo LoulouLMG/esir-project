@@ -4,6 +4,7 @@
  * This is the base url of the app.
  */
 define('URL', 'http://esir-project/');
+define('PORT_SOCKET', '8090');
 
 /**
  * Configuration for: Folders
