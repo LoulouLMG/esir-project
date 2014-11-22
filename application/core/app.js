@@ -9,8 +9,10 @@ var cell_size_px = 20;
 
 var playerSocket = {};
 var playerStatus = {};
+var playersDirection = {};
 var colorPlayer;
 var posBegin;
+var timeOver = false;
 
 var PORT = 8090;
 
@@ -37,17 +39,61 @@ io.sockets.on('connection', function (socket) {
       //Re init for new game
       colorPlayer = ['Peru','Orange','Purple','OliveDrab'];
       posBegin = [[0,0],[width_canvas-cell_size_px-2,high_canvas-cell_size_px-2]];
+      //posBegin = [[0,0],[0,0]];
       var tokentMap = generateMap();
       notifyBeginEverybody(tokentMap);
+      timeOver = false;
+      run();
     }
+  });
+  socket.on('trace', function (data) {
+    console.log('trace de',data.pname,' message ',data.text);
   });
   socket.on('disconnect', function() {
     var parti = getNameBySocket(socket);
     delete playerSocket[parti];
     console.log('leave',parti);
     notifyLeaveEverybody(parti);
+  });
+  socket.on('direction',function (data) {
+    sendDirection(data.pname,data.direction);
+  });
+  socket.on('eaten', function (data) {
+    create_token(data);
+  });
+  socket.on('timeOver', function (data) {
+    timeOver = true;
+  });
+  socket.on('gameOver', function (data) {
+
   })
 });
+
+function run()
+{
+  if(!timeOver)
+  {
+    //Draw the eater every 60ms
+    if(typeof game_loop != "undefined")
+    {
+      clearInterval(game_loop);
+    }
+    game_loop = setInterval(sendDraw, 60);
+  }
+  else
+  {
+    clearInterval(game_loop);
+  }
+}
+
+function sendDraw()
+{
+  for(playerName in playerSocket)
+  {
+    var sock = playerSocket[playerName];
+    sock.emit('draw',playersDirection);
+  }
+}
 
 function getNameBySocket(socket)
 {
@@ -58,6 +104,14 @@ function getNameBySocket(socket)
     {
       return key;
     }
+  }
+}
+
+function sendDirection(playerName,direction)
+{
+  for(playerName in playersDirection)
+  {
+      playersDirection[playerName] = direction;
   }
 }
 
@@ -128,13 +182,26 @@ function checkAllReady()
 //Tell to everyone that the game begin
 function notifyBeginEverybody(map)
 {
+  var config_init = {};
+  for(player in playerSocket)
+  {
+    var color = giveNextColor();
+    var pos = giveNextPos();
+    if(pos[0] === 0 && pos[1] === 0)
+    {
+      playersDirection[player] = "right";
+    }
+    else
+    {
+      playersDirection[player] = "left";
+    }
+    console.log('color ',color,' ,pos ',pos);
+    config_init[player] = {'map':map,'color':color,'pos':pos};
+  }
   for(player in playerSocket)
   {
     var sock = playerSocket[player];
-    var color = giveNextColor();
-    var pos = giveNextPos();
-    console.log('color ',color,' ,pos ',pos);
-    sock.emit('begin',{'map':map,'color':color,'pos':pos});
+    sock.emit('begin',config_init);
   }
 }
 
@@ -181,6 +248,39 @@ function generateMap()
     };
   }
   return token;
+}
+
+//Create a token at a position
+function create_token(position)
+{
+  var token_type = define_token_type();
+  var token = {
+    x: Math.round(Math.random()*(width_canvas-cell_size_px)/cell_size_px), 
+    y: Math.round(Math.random()*(high_canvas-cell_size_px)/cell_size_px), 
+    value: token_type,
+  };
+  for(playerName in playerSocket)
+  {
+    var sock = playerSocket[playerName];
+    sock.emit('newToken',{'position':position,'token':token});
+  }
+}
+
+//Define the type of the new token (basic, rare, magic) and its value
+function define_token_type()
+{
+  var value;
+  var type = Math.random();
+  if(type < 0.6){
+    value = 1;
+  }
+  else if(type >= 0.6 && type < 0.85){
+    value = 3;
+  }
+  else {
+    value = 5;
+  }
+  return value;
 }
 
 function giveNextColor()

@@ -11,19 +11,18 @@ $(document).ready(function(){
 	var width_playerCanvas = $("#playerCanvas").width();
 	var high_playerCanvas = $("#playerCanvas").height();
 	
-	//Lets save the cell width in a variable for easy control
 	var cell_size_px = 20;
-	var direction;
+	//var direction;
 	var token = {};
 	var nb_token = 15;
 	var game_over_status = false;
-	var score;
+	//var score;
 	
 	var count = 30;
 	//var counter = setInterval(timer,1000);
 	var time_over = false;
-	//Lets create the eater now
-	var eater_array; //an array of cells to make up the eater
+	//Create the eater
+	var eater_array;
 	var players_map = {};
 	var player_pos;
 	var player_color;
@@ -39,12 +38,14 @@ $(document).ready(function(){
 		players_map[moi.name] = moi;
 		drawPlayerNames();
 
-		//variable globale définis dans le php
+		//Global value define in the php
 		socket.emit('init',moi.name);
 		socket.on('newPlayer', function (data) {
 			var player = new Object();
 			player.name = data;
 			player.isReady = false;
+			var eater = new Eater();
+			player.eater = eater;
 			players_map[data] = player;
 			drawPlayerNames();
   		});
@@ -57,13 +58,36 @@ $(document).ready(function(){
 			drawPlayerNames();
   		});
   		socket.on('begin', function (data) {
-  			token = data.map;
-  			player_color = data.color;
-  			player_pos = data.pos;
+  			token = data[player_name_current].map;
+  			trace("begin ".concat(data[player_name_current].color,data[player_name_current].pos));
+  			initializePlayers(data);
   			init();
   		});
+  		socket.on('notifyDirection',function (data) {
+  			handleNotifyDirection(data.pname,data.direction);
+  		});
+  		socket.on('newToken', function (data) {
+  			token[data.position] = data.token;
+  		});
+  		socket.on('draw', function (data) {
+  			updatePlayerDirection(data);
+  			paint();
+  		})
   		document.getElementById("button_ready").onclick = playerReady;
 		waitPlayer();
+	}
+
+	function initializePlayers(data)
+	{
+		for(playerName in players_map)
+		{
+			var player = players_map[playerName];
+			var config = data[playerName];
+  			player.color = config.color;
+  			player.pos = config.pos;
+  			player.score = 0;
+  			trace("player = ".concat(playerName," color = ",player.color," pos = ",player.pos));
+		}
 	}
 
 	function waitPlayer()
@@ -97,6 +121,20 @@ $(document).ready(function(){
 		}
 	}
 
+	function handleNotifyDirection(playerName, playerDirection)
+	{
+		var player = players_map[playerName];
+		player.direction = playerDirection;
+	}
+
+	function updatePlayerDirection(dirMap)
+	{
+		for(playerName in dirMap)
+		{
+			players_map[playerName].direction = dirMap[playerName];
+		}
+	}
+
 	function drawPlayerNames()
 	{
 		playerCtx.clearRect(2, 2, width_playerCanvas-4, high_playerCanvas-4);
@@ -111,7 +149,7 @@ $(document).ready(function(){
 			}
 			playerCtx.fillText(player.name, pos_name_x, pos_name_y);
 			pos_name_y += 20;
-			//Pour ne plus ecrire en vert le prochain coup
+			//To be sure that we don't write in green next time
 			playerCtx.fillStyle = 'black';
 		}
 	}
@@ -120,40 +158,50 @@ $(document).ready(function(){
 	{
 		//If the game begin
 		var counter = setInterval(timer,1000);
-		timer();
+		timer(counter);
 		if(!game_over_status && !time_over) {
-			if(player_pos[0] === 0)
+			initPlayer();
+			//Display the score
+			//score = 0;
+			paint();
+/*			//Draw the eater every 60ms
+			if(typeof game_loop != "undefined")
 			{
-				direction = "right";
+				clearInterval(game_loop);
+			}
+			game_loop = setInterval(paint, 60);*/
+		} else {
+			//When you have loose the game
+/*			if(typeof game_loop != "undefined")
+			{
+				clearInterval(game_loop);
+			}
+			game_loop = setInterval(write_game_over, 60);*/
+			write_game_over();
+		}
+	}
+
+	function initPlayer()
+	{
+		for(playerName in players_map)
+		{
+			var player = players_map[playerName];
+			if(player.pos[0] === 0)
+			{
+				player.direction = "right";
 			}
 			else
 			{
-				direction = "left";
+				player.direction = "left";
 			}
-
-			create_eater();
-
-			//Display the score
-			score = 0;
-			
-			//Lets move the eater now using a timer which will trigger the paint function
-			//every 60ms
-			if(typeof game_loop != "undefined")
-			{
-				clearInterval(game_loop);
-			}
-			game_loop = setInterval(paint, 60);
-		} else {
-			//When you have loose the game
-			if(typeof game_loop != "undefined")
-			{
-				clearInterval(game_loop);
-			}
-			game_loop = setInterval(write_game_over, 60);
-		}
+			//trace("direction".concat(player.direction));
+			var eater = new Eater();
+			eater.getEaterArray().push({x: player.pos[0], y:player.pos[1]});
+			player.eater = eater;
+		}	
 	}
 	
-	function timer()
+	function timer(counter)
 	{
 		if (!game_over_status) 
 		{
@@ -171,14 +219,23 @@ $(document).ready(function(){
 	}
 
 	//Create the eater
-	function create_eater()
+	function Eater()
 	{
 		//Length of the eater
-		var length = 1; 
+		this.length = 1; 
 		//The array eater
-		eater_array = [];
+		this.eater_array = [];
+		/*
 		//This will create an eater
-		eater_array.push({x: player_pos[0], y:player_pos[1]});
+		this.eater_array.push({x: player_pos[0], y:player_pos[1]});
+		*/
+
+	}
+	Eater.prototype.getEaterArray = function() {
+		return this.eater_array;
+	}
+	Eater.prototype.pushArray = function(pos) {
+		return this.eater_array.push(pos);
 	}
 	
 	//Create the first tokens
@@ -193,7 +250,7 @@ $(document).ready(function(){
 		}
 	}
 
-	//Create a token at a position
+/*	//Create a token at a position
 	function create_token(position)
 	{
 		var token_type = define_token_type();
@@ -202,7 +259,7 @@ $(document).ready(function(){
 			y: Math.round(Math.random()*(high_canvas-cell_size_px)/cell_size_px), 
 			value: token_type,
 		};
-	}
+	}*/
 
 	//Clear the canvas
 	function delete_canvas()
@@ -219,7 +276,7 @@ $(document).ready(function(){
 		ctx.strokeRect(0, 0, width_canvas, high_canvas);
 	}
 
-	//Define the type of the new token (basic, rare, magic) and its value
+/*	//Define the type of the new token (basic, rare, magic) and its value
 	function define_token_type()
 	{
 		var value;
@@ -234,7 +291,7 @@ $(document).ready(function(){
 			value = 5;
 		}
 		return value;
-	}
+	}*/
 
 	//Paint the canvas
 	function paint()
@@ -242,81 +299,79 @@ $(document).ready(function(){
 		//Paint the canvas
 
 		empty_canvas();
-		
-		//The movement code for the eater to come here.
-		//The logic is simple
-		//Pop out the tail cell and place it infront of the head cell
-		var nx = eater_array[0].x;
-		var ny = eater_array[0].y;
-		//These were the position of the head cell.
-		//We will increment it to get the new head position
-		//Lets add proper direction based movement now
+		for(player in players_map)
+		{
+			var current = players_map[player];
+			var array = current.eater.getEaterArray();
+			//The head of the eater
+			var nx = array[0].x;
+			var ny = array[0].y;
+			var direction = current.direction;
+			var color = current.color;
 
-		if(direction == "right") nx++;
-		else if(direction == "left") nx--;
-		else if(direction == "up") ny--;
-		else if(direction == "down") ny++;
-		
-		//Lets add the game over clauses now
-		//This will restart the game if the eater hits the wall
-		//Lets add the code for body collision
-		//Now if the head of the eater bumps into its body, the game will restart
-		if(nx == -1 || nx == width_canvas/cell_size_px || ny == -1 || ny == high_canvas/cell_size_px || check_collision(nx, ny, eater_array))
-		{
-			delete_canvas();
-			game_over_status = true;
-			init();
-			//Lets organize the code a bit now.
-			//return;
-		}
-		if(time_over)
-		{
-			time_over = true;
-			init();
-		}
-		
-		//Lets write the code to make the eater eat the token
-		//The logic is simple
-		//If the new head position matches with that of the token,
-		//Create a new head instead of moving the tail
-		var cd = false;
-		var position_to_create;
-		for(var i =0; i <token.length; i++){
-			if(nx == token[i].x && ny == token[i].y){
-				cd =true;
-				position_to_create = i;
-				break;
+			//Define the head position from his direction
+			if(direction == "right") nx++;
+			else if(direction == "left") nx--;
+			else if(direction == "up") ny--;
+			else if(direction == "down") ny++;
+			
+			//Check if the eater hit something
+			//if(nx == -1 || nx == width_canvas/cell_size_px || ny == -1 || ny == high_canvas/cell_size_px || check_collision(nx, ny, array))
+			if(nx == -1 || nx == width_canvas/cell_size_px || ny == -1 || ny == high_canvas/cell_size_px)
+			{
+				delete_canvas();
+				game_over_status = true;
+				//init();
+				socket.emit("gameOver",player_name_current);
 			}
+			if(time_over)
+			{
+				time_over = true;
+				socket.emit("timeOver");
+				//init();
+			}
+			//Make the eater can eat a token
+			var token_eaten = false;
+			var position_to_create = 0;
+			var index = 0;
+			for(toke in token){
+				index++;
+				if(nx == token[toke].x && ny == token[toke].y){
+					token_eaten =true;
+					position_to_create = index;
+					break;
+				}
+			}
+			var tail;
+			if(token_eaten)
+			{
+				tail = {x: nx, y: ny};
+				current.score = current.score+token[position_to_create].value;
+				//Create new token
+				socket.emit('eaten',position_to_create);
+				//create_token(position_to_create);
+			}
+			else
+			{
+				//Delete the last cell
+				tail = array.pop();
+				tail.x = nx;
+				tail.y = ny;
+			}
+			trace("paint player ".concat(player," color ",color," pos x=",nx," pos y=",ny));
+			paintEater(current.eater,tail,color);
 		}
-		if(cd)
+		//Paint all the eaters
+/*		for(eater in players_map)
 		{
-			var tail = {x: nx, y: ny};
-			score = score+token[position_to_create].value;
-			//Create new token
-			create_token(position_to_create);
-		}
-		else
-		{
-			var tail = eater_array.pop(); //pops out the last cell
-			tail.x = nx; tail.y = ny;
-		}
-
-		
-		eater_array.unshift(tail); //puts back the tail as the first cell
-		
-		for(var i = 0; i < eater_array.length; i++)
-		{
-			var c = eater_array[i];
-			//Paint the cells
-			paint_eater_cell(c.x, c.y);
-		}
-		
+			paintEater(players_map[eater].eater);
+		}*/
 
 		//Paint the tokens
 		paintToken();
 
 		//Lets paint the score
-		var score_text = "Score: " + score;
+		var score_text = "Score: " + current.score;
 		ctx.fillText(direction, 500, 500);
 		ctx.fillText(score_text, 5, high_canvas-5);
 	}
@@ -334,6 +389,22 @@ $(document).ready(function(){
 		for(tok in token)
 		{
 			paint_cell(token[tok].x, token[tok].y,token[tok].value);
+		}
+	}
+
+	//Paint one eater
+	function paintEater(eater,tail,color)
+	{
+		trace("drawing eater");
+		eater.getEaterArray().unshift(tail);
+		var eaterArray = eater.getEaterArray();
+		//eaterArray.unshift(tail);
+		for(var i = 0; i < eaterArray.length; i++)
+		{
+			var c = eaterArray[i];
+			//Paint the cells
+			paint_eater_cell(c.x, c.y, color);
+			//trace("eater drawn x=".concat(c.x," y=",c.y));
 		}
 	}
 	
@@ -359,9 +430,10 @@ $(document).ready(function(){
 		ctx.strokeRect(x*cell_size_px, y*cell_size_px, cell_size_px, cell_size_px);
 	}
 
-	function paint_eater_cell(x, y)
+	function paint_eater_cell(x, y, color)
 	{
-		ctx.fillStyle = player_color;
+		//trace("eaterpos x=".concat(x," y=",y));
+		ctx.fillStyle = color;
 		ctx.fillRect(x*cell_size_px, y*cell_size_px, cell_size_px, cell_size_px);
 		ctx.strokeStyle = "white";
 		ctx.strokeRect(x*cell_size_px, y*cell_size_px, cell_size_px, cell_size_px);
@@ -369,8 +441,7 @@ $(document).ready(function(){
 	
 	function check_collision(x, y, array)
 	{
-		//This function will check if the provided x/y coordinates exist
-		//in an array of cells or not
+		//Check if the eater hit something
 		for(var i = 0; i < array.length; i++)
 		{
 			if(array[i].x == x && array[i].y == y)
@@ -379,16 +450,24 @@ $(document).ready(function(){
 		return false;
 	}
 	
-	//Lets add the keyboard controls now
+	//Keyboard controls
 	$(document).keydown(function(e){
 		var key = e.which;
-		//We will add another clause to prevent reverse gear
-		if(key == "37" && direction != "right") direction = "left";
-		else if(key == "38" && direction != "down") direction = "up";
-		else if(key == "39" && direction != "left") direction = "right";
-		else if(key == "40" && direction != "up") direction = "down";
-		//The snake is now keyboard controllable
+		var moi = players_map[player_name_current];
+		var direction = moi.direction;
+		var newDirection;
+		//Add another clause to prevent reverse gear
+		if(key == "37" && direction != "right") newDirection = "left";
+		else if(key == "38" && direction != "down") newDirection = "up";
+		else if(key == "39" && direction != "left") newDirection = "right";
+		else if(key == "40" && direction != "up") newDirection = "down";
+		socket.emit('direction',{'pname':player_name_current,'direction':newDirection});
 	})
+
+	function trace(text)
+	{
+		console.log("trace",text);
+	}
 	
 	
 })

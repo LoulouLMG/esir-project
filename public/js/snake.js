@@ -5,7 +5,6 @@ $(document).ready(function(){
 	var width_canvas = $("#canvas").width();
 	var high_canvas = $("#canvas").height();
 	
-	//Lets save the cell width in a variable for easy control
 	var cell_size_px = 20;
 	var direction;
 	var token = [];
@@ -16,8 +15,8 @@ $(document).ready(function(){
 	var count = 30;
 	var counter = setInterval(timer,1000);
 	var time_over = false;
-	//Lets create the eater now
-	var eater_array; //an array of cells to make up the eater
+	//Create the eater
+	var eater_array;
 	
 	init();
 	
@@ -26,14 +25,13 @@ $(document).ready(function(){
 		//If the game begin
 		timer();
 		if(!game_over_status && !time_over) {
-			direction = "right"; //default direction
+			direction = "right";
 			create_eater();
-			init_token(); //Now we can see the token particle
-			//finally lets display the score
+			init_token();
+			//Display the score
 			score = 0;
 			
-			//Lets move the eater now using a timer which will trigger the paint function
-			//every 60ms
+			//Draw the eater every 60 ms
 			if(typeof game_loop != "undefined")
 			{
 				clearInterval(game_loop);
@@ -64,8 +62,10 @@ $(document).ready(function(){
 	//Create the eater
 	function create_eater()
 	{
-		var length = 1; //Length of the eater
-		eater_array = []; //Empty array to start with
+		//Length of the eater
+		var length = 1;
+		//Empty array to start with
+		eater_array = [];
 		//This will create an eater starting from the top left
 		eater_array.push({x: 0, y:0});
 	}
@@ -129,36 +129,26 @@ $(document).ready(function(){
 	//Paint the canvas
 	function paint()
 	{
-		//To avoid the eater trail we need to paint the BG on every frame
-		//Lets paint the canvas now
 
+		//Draw an empty canvas
 		empty_canvas();
 		
-		//The movement code for the eater to come here.
-		//The logic is simple
-		//Pop out the tail cell and place it infront of the head cell
+		//Initalize the eater array with the position of his head
 		var nx = eater_array[0].x;
 		var ny = eater_array[0].y;
-		//These were the position of the head cell.
-		//We will increment it to get the new head position
-		//Lets add proper direction based movement now
 
+		//Get the new position of his head
 		if(direction == "right") nx++;
 		else if(direction == "left") nx--;
 		else if(direction == "up") ny--;
 		else if(direction == "down") ny++;
 		
-		//Lets add the game over clauses now
-		//This will restart the game if the eater hits the wall
-		//Lets add the code for body collision
-		//Now if the head of the eater bumps into its body, the game will restart
+		//Check if the eater hit something
 		if(nx == -1 || nx == width_canvas/cell_size_px || ny == -1 || ny == high_canvas/cell_size_px || check_collision(nx, ny, eater_array))
 		{
 			delete_canvas();
 			game_over_status = true;
 			init();
-			//Lets organize the code a bit now.
-			//return;
 		}
 		if(time_over)
 		{
@@ -166,20 +156,17 @@ $(document).ready(function(){
 			init();
 		}
 		
-		//Lets write the code to make the eater eat the token
-		//The logic is simple
-		//If the new head position matches with that of the token,
-		//Create a new head instead of moving the tail
-		var cd = false;
+		//Make the eater can take a token
+		var token_eaten = false;
 		var position_to_create;
 		for(var i =0; i <token.length; i++){
 			if(nx == token[i].x && ny == token[i].y){
-				cd =true;
+				token_eaten =true;
 				position_to_create = i;
 				break;
 			}
 		}
-		if(cd)
+		if(token_eaten)
 		{
 			var tail = {x: nx, y: ny};
 			score = score+token[position_to_create].value;
@@ -188,26 +175,26 @@ $(document).ready(function(){
 		}
 		else
 		{
-			var tail = eater_array.pop(); //pops out the last cell
-			tail.x = nx; tail.y = ny;
+			//Delete the last cell
+			var tail = eater_array.pop();
+			tail.x = nx;
+			tail.y = ny;
 		}
 
-		//The eater can now eat the food.
-		
-		eater_array.unshift(tail); //puts back the tail as the first cell
+		//Put the eater to the first cell
+		eater_array.unshift(tail); 
 		
 		for(var i = 0; i < eater_array.length; i++)
 		{
 			var c = eater_array[i];
-			//Lets paint 10px wide cells
 			paint_eater_cell(c.x, c.y);
 		}
 		
-		//Lets paint the token
+		//Paint the tokens
 		for(var i = 0; i < token.length; i++){
 			paint_cell(token[i].x, token[i].y,token[i].value);
 		}
-		//Lets paint the score
+		//Paint the score
 		var score_text = "Score: " + score;
 		ctx.fillText(score_text, 5, high_canvas-5);
 	}
@@ -263,8 +250,7 @@ $(document).ready(function(){
 	
 	function check_collision(x, y, array)
 	{
-		//This function will check if the provided x/y coordinates exist
-		//in an array of cells or not
+		//Check if the eater hit something
 		for(var i = 0; i < array.length; i++)
 		{
 			if(array[i].x == x && array[i].y == y)
@@ -273,15 +259,14 @@ $(document).ready(function(){
 		return false;
 	}
 	
-	//Lets add the keyboard controls now
+	//Keyboard controls
 	$(document).keydown(function(e){
 		var key = e.which;
-		//We will add another clause to prevent reverse gear
+		//Another clause to prevent reverse gear
 		if(key == "37" && direction != "right") direction = "left";
 		else if(key == "38" && direction != "down") direction = "up";
 		else if(key == "39" && direction != "left") direction = "right";
 		else if(key == "40" && direction != "up") direction = "down";
-		//The snake is now keyboard controllable
 	})
 	
 	

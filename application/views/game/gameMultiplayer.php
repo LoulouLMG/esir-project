@@ -12,7 +12,6 @@
         <!-- librairie -->
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
 		<script type="text/javascript" src="<?php echo URL;?>public/js/snakeMulti.js"></script>
-
         <button id="button_ready">Ready</button>
 
 
