@@ -3,6 +3,7 @@
  * Configuration for: Base URL
  * This is the base url of the app.
  */
+define('BASE_URL', 'http://esir-project');
 define('URL', 'http://esir-project/');
 define('PORT_SOCKET', '8090');
 
