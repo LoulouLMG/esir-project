@@ -5,7 +5,7 @@
         <?php $this->renderFeedbackMessages(); ?>
 
         <!-- Texte aléatoire useless pour test -->
-        <p align="justify">Projet réalisé avec PHP, CSS, javascript et le concept AJAX</p>
+        <p align="justify">Projet réalisé avec PHP, CSS, javascript et Node JS</p>
 
         <?php 
         if(Session::get('user_logged_in'))

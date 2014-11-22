@@ -13,6 +13,9 @@
         <form action="<?php echo URL; ?>game/multiplayer">
             <input type="submit" value="Partie multijoueur">
         </form>
+        <form action="<?php echo URL; ?>game/dev">
+            <input type="submit" value="TEST">
+        </form>
         <p align="justify">Le premier bouton va charger une partie en solo et l'afficher dans un canvas, le second va charger une partie en multijoueur</p>
     </article>
 </div>

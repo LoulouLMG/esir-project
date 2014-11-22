@@ -29,4 +29,9 @@ class Game extends Controller
     {
         $this->view->render('game/gameMultiplayer');
     }
+
+    function dev()
+    {
+        $this->view->render('game/dev');
+    }
 }

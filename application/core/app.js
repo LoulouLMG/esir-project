@@ -2,6 +2,7 @@ var app = require('http').createServer(handler)
 var io = require('socket.io')(app);
 var fs = require('fs');
 
+//need to receive these datas dynamically from client.
 var width_canvas = 600;
 var high_canvas = 600;
 var cell_size_px = 20;
@@ -11,7 +12,9 @@ var playerStatus = {};
 var colorPlayer;
 var posBegin;
 
-app.listen(8090);
+var PORT = 8090;
+
+app.listen(PORT);
 
 function handler (req, res) {
   fs.window.location("<?php echo URL?>");

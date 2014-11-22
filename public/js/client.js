@@ -1,6 +1,6 @@
 $(document).ready( function() 
 {
-  var animate, canvas, connect, context, id, sendDirection, server, PORT, HOST;
+  var animate, canvas, connection, context, id, sendDirection, server, PORT, HOST;
 
   //Canvas stuff
   canvas = $("#canvas");
@@ -8,7 +8,7 @@ $(document).ready( function()
 
   id = null;
   server = null;
-  HOST = "http://esir-project/";
+  HOST = "http://esir-project";
   PORT = 8090;
 
   sendDirection = function(direction) 
@@ -62,32 +62,30 @@ $(document).ready( function()
   };
 
   // definition connection to the websocket
-  connect = function() 
+  connection = function() 
   {
-    server = new io.Socket( HOST, 
-    {
-      'port': PORT;
-    }
-    );
-    server.connect();
-    return 
-    server.on("message", function(event) 
+    server = io.connect(HOST+":"+PORT);
+   
+    server.on("message", function(data) 
     {
       var message;
-      message = JSON.parse(event);
+      message = JSON.parse(data);
+      alert("id : "+message.value);
       switch (message.type) 
       {
-        case 'id':      return id = message.value;
-        case 'players':  return animate(message.value);
+        case 'id':   id = message.value; break;
+        case 'players':  animate(message.value); break;
       }
     });
+
+
   };
 
   // connection established
-  connect();
-
+  connection();
+  alert(id); 
   // return direction taken by the player.
-  return $(document).keydown(function(event) 
+  $(document).keydown(function(event) 
   {
     var key;
     key = event.keyCode ? event.keyCode : event.which;
@@ -103,3 +101,4 @@ $(document).ready( function()
     }
   });
 });
+
