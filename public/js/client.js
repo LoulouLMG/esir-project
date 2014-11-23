@@ -24,9 +24,11 @@ $(document).ready( function()
   };
 
   // animes all the other players
-  animate = function(players) 
+  animate = function(entities) 
   {
-    var element, snake, x, y, nb_player, result;
+    var element, snake, x, y, result;
+    var players = entities.players;
+    var tokens = entities.tokens;
     context.fillStyle = 'rgb(230,230,230)';
     for (x = 0; x <= 59; x++) 
     {
@@ -36,6 +38,25 @@ $(document).ready( function()
      }
    }
    result = [];
+   
+   // display tokens
+    for (var i = 0, nb_tokens = tokens.length; i < nb_tokens; i++) 
+    {
+      // get the number i player's snake
+      token = tokens[i];
+      context.fillStyle = token.type.color;
+      
+      // add its data to the result of which object will be animated
+      (function() 
+      {
+        position = token.position;
+        x = position[0] * 10;
+        y = position[1] * 10;
+        context.fillRect(x, y, 9, 9);
+      })();
+    } 
+
+    //display players
    for (var i = 0, nb_player = players.length; i < nb_player; i++) 
    {
       // get the number i player's snake
@@ -129,4 +150,3 @@ $(document).ready( function()
     }
   });
 });
-

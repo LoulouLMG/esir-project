@@ -1,67 +1,85 @@
-
-/* Server *******************************************************************************/
-function handler (req, res) 
+/* Token Class ********************************************************************************************************/
+Token = (function() 
 {
-  fs.window.location("<?php echo URL?>");
-}
-
-var app = require('http').createServer(handler)
-var io = require('socket.io')(app);
-var fs = require('fs');
-
-
-var client_id = 0;
-
-players = [];
-
-var LAST_TILE_COORDONATE = 59;
-var PORT = 8090;
-
-var colorPlayer;
-var posBegin;
-var LENGTH_INIT = 5;
-
-
-app.listen(PORT);
-
-/* Connections handling ********************************************************************/
-io.on('connection', function (socket) 
-{
-  var _clientId, _clientSnake;
-  // We give an id to the newcomer, all new id is increased
-  _clientId = client_id ++;  
-  // the server send his id to the client
-  socket.emit("id", _clientId);
-  console.log("Client connected");
-
-  socket.on("newClient", function(client) 
+  // constructor
+  function Token() 
   {
-    console.log("Client " + _clientId + " is:" + client.name);
-    // A snake is attributed to the new client
-    _clientSnake = new Snake(_clientId, client.name);
-    // the new snake is added to the list
+    this.init();  
+  }
 
-    players.push(_clientSnake);
-  });
-
-  socket.on("direction", function(direction) 
+  Token.prototype.init = function() 
   {
-    _clientSnake.direction = direction;
-  });
+    // a random type is attributed to the token
+    this.randomizeType();
+    // a random coordonnate is attributed to the token
+    this.randomizePosition();
+  };
 
-  socket.on("disconnect", function() {
-    var i = players.indexOf(_clientSnake);
-    if(i != -1) 
+  Token.prototype.randomizeType = function() 
+  {
+    var rand = Math.floor(Math.random() * 7);
+    // a type is attributed to the token
+    if(rand <= 3)
     {
-      players.splice(i, 1);
+      this.type = TOKEN_TYPE.SMALL;
     }
-    console.log("Client " + _clientId + " disconnected");
-    //client_id --;
-  });
+    if(rand > 3 && rand <= 5)
+    {
+      this.type = TOKEN_TYPE.MEDIUM;
+    }
+    if(rand == 6)
+    {
+      this.type = TOKEN_TYPE.BIG;
+    }
+  };
 
-});
+  Token.prototype.randomizePosition = function() 
+  {
+    var position;
+    var rand = Math.floor(Math.random() * 59);
+    x = rand;
+    rand = Math.floor(Math.random() * 59);
+    y = rand;
+    position = [x, y];
+    // we check if the coordonates are available
+    for(var i in players.elements)
+    {
+      while(i == position)
+      {
+        position[0]++;
+        position[1]++;
+        if( position[0] == LAST_TILE_COORDONATE + 1)
+        {
+          position[0] = 0;
+        }
+        if( position[1] == LAST_TILE_COORDONATE + 1)
+        {
+          position[1] = 0;
+        }
+      }
+    }
+    for(var i in tokens)
+    {
+      while(i == position)
+      {
+        position[0]++;
+        position[1]++;
+        if( position[0] == LAST_TILE_COORDONATE + 1)
+        {
+          position[0] = 0;
+        }
+        if( position[1] == LAST_TILE_COORDONATE + 1)
+        {
+          position[1] = 0;
+        }
+      }
+    }
+    this.position = position;
+  };
+  return Token;
+})();
 
-/* Snake Class *************************************************************************************/
+/* Snake Class **********************************************************************************************************/
 Snake = (function() 
 {
   // constructor
@@ -78,7 +96,8 @@ Snake = (function()
   };
 
   // init a snake in a random position
-  Snake.prototype.reset = function() {
+  Snake.prototype.reset = function() 
+  {
     this.length = LENGTH_INIT;
     this.direction = "right";
     this.elements = (function() 
@@ -153,7 +172,7 @@ Snake = (function()
   };
 
   // collision with other players
-  Snake.prototype.checkCollisionWith = function(other) 
+  Snake.prototype.checkCollisionWithPlayer = function(other) 
   {
     var collision, element, other_head, current_snake_elements;
     other_head = other.head();
@@ -171,6 +190,27 @@ Snake = (function()
       }
     }
     return collision;
+  };
+
+  // collision with token
+  Snake.prototype.checkCollisionWithToken = function() 
+  {
+    var collision, element, token, head;
+    head = this.head();
+    
+    for (var i = 0, nb_token = tokens.length; i < nb_token; i++) 
+    {
+      token = tokens[i];
+     
+      if (head[0] === token.position[0] && head[1] === token.position[1]) 
+      {
+        for(var i = 0 ; i < token.type.worth ; i++)
+        {
+          this.grow();
+        }
+        token.init();
+      }
+    }
   };
 
   // collision with ourselves
@@ -192,7 +232,108 @@ Snake = (function()
   return Snake;
 })();
 
-/* Update Game State and notify players*/
+/* Server ********************************************************************************************************************/
+function handler (req, res) 
+{
+  fs.window.location("<?php echo URL?>");
+}
+
+var app = require('http').createServer(handler)
+var io = require('socket.io')(app);
+var fs = require('fs');
+
+var client_id = 0;
+
+players = [];
+tokens = [];
+
+var LENGTH_INIT = 5;
+var LAST_TILE_COORDONATE = 59;
+var PORT = 8090;
+var NB_TOKENS = 15;
+
+app.listen(PORT);
+
+var TOKEN_TYPE = {
+  SMALL : 
+  {
+    worth: 1, 
+    name: "small", 
+    color: "rgb(0,0,0)",
+    lifespan: 10
+  }, 
+  MEDIUM: 
+  {
+    worth: 2, 
+    name: "medium", 
+    color: "rgb(255,204,0)",
+    lifespan: 7
+  }, 
+  BIG : 
+  {
+    worth: 4, 
+    name: "big", 
+    color: "rgb(204,0,0)",
+    lifespan: 4
+  }
+};
+
+timers = [];
+for(var i = 0; i < NB_TOKENS; i++)
+{
+  var token = new Token();
+  tokens.push(token);
+  /*
+  timers.push(setInterval(function()
+  {
+     token.init();
+  }, token.type.lifespan * 1000));*/
+}
+
+
+
+
+
+
+/* Connections handling ***************************************************************************************************/
+io.on('connection', function (socket) 
+{
+  var _clientId, _clientSnake;
+  // We give an id to the newcomer, all new id is increased
+  _clientId = client_id ++;  
+  // the server send his id to the client
+  socket.emit("id", _clientId);
+  //console.log("Tokens: " + JSON.stringify(tokens));
+  console.log("Client connected");
+
+  socket.on("newClient", function(client) 
+  {
+    console.log("Client " + _clientId + " is:" + client.name);
+    // A snake is attributed to the new client
+    _clientSnake = new Snake(_clientId, client.name);
+    // the new snake is added to the list
+
+    players.push(_clientSnake);
+  });
+
+  socket.on("direction", function(direction) 
+  {
+    _clientSnake.direction = direction;
+  });
+
+  socket.on("disconnect", function() {
+    var i = players.indexOf(_clientSnake);
+    if(i != -1) 
+    {
+      players.splice(i, 1);
+    }
+    console.log("Client " + _clientId + " disconnected");
+    //client_id --;
+  });
+});
+
+
+/* Update Game State and notify players *************************************************************************************/
 updateState = function() 
 {
   var i, nb_player;
@@ -202,10 +343,16 @@ updateState = function()
   }
 
   checkCollisions();
+  checkTokenLifeSpan();
   // send the list of all players to all players
   if(players.length>0)
   {
-    io.sockets.emit("update", players);
+    var entities = {
+      "players" : players,
+      "tokens"  : tokens
+    }
+
+    io.sockets.emit("update", entities);
   }
 };
 checkCollisions = function() {
@@ -224,7 +371,7 @@ checkCollisions = function() {
       other = players[j];
       if (other !== current_player) 
       {
-        if (other.checkCollisionWith(current_player)) 
+        if (other.checkCollisionWithPlayer(current_player)) 
         {
           // if player crashed against another player, the other player grows and the player dies
           dead_players.push(current_player);
@@ -232,6 +379,7 @@ checkCollisions = function() {
         }
       }
     }
+    current_player.checkCollisionWithToken();
   }
   for (k = 0, nb_dead_players = dead_players.length; k < nb_dead_players; k++) 
   {
@@ -241,5 +389,16 @@ checkCollisions = function() {
   return result;
 };
 
+checkTokenLifeSpan = function() 
+{
+
+};
+
 tick = setInterval(updateState, 100);
+
+
+
+
+
+
 
