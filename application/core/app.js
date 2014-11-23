@@ -1,4 +1,4 @@
-var app = require('http').createServer(handler)
+var app = require('http').createServer(handler);
 var io = require('socket.io')(app);
 var fs = require('fs');
 
@@ -39,6 +39,7 @@ io.sockets.on('connection', function (socket) {
       //Re init for new game
       colorPlayer = ['Peru','Orange','Purple','OliveDrab'];
       posBegin = [[0,0],[width_canvas-cell_size_px-2,high_canvas-cell_size_px-2]];
+      //posBegin = [[width_canvas-cell_size_px-2,high_canvas-cell_size_px-2],[width_canvas-cell_size_px-2,high_canvas-cell_size_px-2]];
       //posBegin = [[0,0],[0,0]];
       var tokentMap = generateMap();
       notifyBeginEverybody(tokentMap);
@@ -65,8 +66,8 @@ io.sockets.on('connection', function (socket) {
     timeOver = true;
   });
   socket.on('gameOver', function (data) {
-
-  })
+    playerStatus[data] = false;
+  });
 });
 
 function run()
@@ -88,16 +89,22 @@ function run()
 
 function sendDraw()
 {
-  for(playerName in playerSocket)
+  if (!timeOver)
   {
-    var sock = playerSocket[playerName];
-    sock.emit('draw',playersDirection);
+    for(var playerName in playerSocket)
+    {
+      if (playerStatus[playerName])
+      {
+        var sock = playerSocket[playerName];
+        sock.emit('draw',playersDirection);        
+      }
+    }
   }
 }
 
 function getNameBySocket(socket)
 {
-  for(key in playerSocket)
+  for(var key in playerSocket)
   {
     var val = playerSocket[key];
     if(val === socket)
@@ -109,16 +116,13 @@ function getNameBySocket(socket)
 
 function sendDirection(playerName,direction)
 {
-  for(playerName in playersDirection)
-  {
-      playersDirection[playerName] = direction;
-  }
+  playersDirection[playerName] = direction;
 }
 
 //Quand un nouveau joueur se connecte
 function notifyInitEverybody(data)
 {
-  for(player in playerSocket)
+  for(var player in playerSocket)
   {
     //Renvoie le nouveau joueur à tous les autres joueurs présents
     if(player !== data)
@@ -134,9 +138,9 @@ function notifyInitEverybody(data)
       {
         if(player !== data)
         {
-          var sock = playerSocket[data];
+          var osock = playerSocket[data];
           console.log('joueur present',player);
-          sock.emit('newPlayer',player);       
+          osock.emit('newPlayer',player);       
         }
       }
     }
@@ -146,7 +150,7 @@ function notifyInitEverybody(data)
 //Envoie à tout le monde le nom du joueur parti
 function notifyLeaveEverybody(parti)
 {
-  for(player in playerSocket)
+  for(var player in playerSocket)
   {
     var sock = playerSocket[player];
     sock.emit('leave',parti);
@@ -164,7 +168,7 @@ function checkAllReady()
 {
   var nbPlayer = getNbPlayer();
   var nbPlayerReady = 0;
-  for(player in playerStatus)
+  for(var player in playerStatus)
   {
     var status = playerStatus[player];
     if(status)
@@ -183,7 +187,7 @@ function checkAllReady()
 function notifyBeginEverybody(map)
 {
   var config_init = {};
-  for(player in playerSocket)
+  for(var player in playerSocket)
   {
     var color = giveNextColor();
     var pos = giveNextPos();
@@ -198,9 +202,9 @@ function notifyBeginEverybody(map)
     console.log('color ',color,' ,pos ',pos);
     config_init[player] = {'map':map,'color':color,'pos':pos};
   }
-  for(player in playerSocket)
+  for(var oplayer in playerSocket)
   {
-    var sock = playerSocket[player];
+    var sock = playerSocket[oplayer];
     sock.emit('begin',config_init);
   }
 }
@@ -209,9 +213,9 @@ function notifyBeginEverybody(map)
 function getNbPlayer()
 {
   var count = 0;
-  for(player in playerStatus)
+  for(var player in playerStatus)
   {
-    count++
+    count++;
   }
   return count;
 }
@@ -227,7 +231,7 @@ function sendReady(ready,dest)
 //Notify all other player
 function notifyOther(namePlayer,callback)
 {
-  for(player in playerSocket)
+  for(var player in playerSocket)
   {
     if (player !== namePlayer) {
       callback(namePlayer,player);
@@ -259,7 +263,7 @@ function create_token(position)
     y: Math.round(Math.random()*(high_canvas-cell_size_px)/cell_size_px), 
     value: token_type,
   };
-  for(playerName in playerSocket)
+  for(var playerName in playerSocket)
   {
     var sock = playerSocket[playerName];
     sock.emit('newToken',{'position':position,'token':token});

@@ -41,7 +41,7 @@ $(document).ready(function(){
 		//Global value define in the php
 		socket.emit('init',moi.name);
 		socket.on('newPlayer', function (data) {
-			var player = new Object();
+			var player = {};
 			player.name = data;
 			player.isReady = false;
 			var eater = new Eater();
@@ -72,22 +72,24 @@ $(document).ready(function(){
   		socket.on('draw', function (data) {
   			updatePlayerDirection(data);
   			paint();
-  		})
+  		});
   		document.getElementById("button_ready").onclick = playerReady;
 		waitPlayer();
 	}
 
 	function initializePlayers(data)
 	{
-		for(playerName in players_map)
+		for(var playerName in players_map)
 		{
 			var player = players_map[playerName];
 			var config = data[playerName];
   			player.color = config.color;
   			player.pos = config.pos;
   			player.score = 0;
+  			
   			trace("player = ".concat(playerName," color = ",player.color," pos = ",player.pos));
 		}
+		updatePlayerDisplay(players_map);
 	}
 
 	function waitPlayer()
@@ -129,7 +131,7 @@ $(document).ready(function(){
 
 	function updatePlayerDirection(dirMap)
 	{
-		for(playerName in dirMap)
+		for(var playerName in dirMap)
 		{
 			players_map[playerName].direction = dirMap[playerName];
 		}
@@ -140,13 +142,29 @@ $(document).ready(function(){
 		playerCtx.clearRect(2, 2, width_playerCanvas-4, high_playerCanvas-4);
 		var pos_name_x = 10;
 		var pos_name_y = 10;
-		for(pname in players_map)
+		for(var pname in players_map)
 		{
 			var player = players_map[pname];
 			if(player.isReady)
 			{
 				playerCtx.fillStyle = 'green';
 			}
+			playerCtx.fillText(player.name, pos_name_x, pos_name_y);
+			pos_name_y += 20;
+			//To be sure that we don't write in green next time
+			playerCtx.fillStyle = 'black';
+		}
+	}
+
+	function updatePlayerDisplay(playerName, color) 
+	{
+		playerCtx.clearRect(2, 2, width_playerCanvas-4, high_playerCanvas-4);
+		var pos_name_x = 10;
+		var pos_name_y = 10;
+		for(var pname in players_map)
+		{
+			var player = players_map[pname];
+			playerCtx.fillStyle = player.color;
 			playerCtx.fillText(player.name, pos_name_x, pos_name_y);
 			pos_name_y += 20;
 			//To be sure that we don't write in green next time
@@ -183,7 +201,7 @@ $(document).ready(function(){
 
 	function initPlayer()
 	{
-		for(playerName in players_map)
+		for(var playerName in players_map)
 		{
 			var player = players_map[playerName];
 			if(player.pos[0] === 0)
@@ -233,10 +251,10 @@ $(document).ready(function(){
 	}
 	Eater.prototype.getEaterArray = function() {
 		return this.eater_array;
-	}
+	};
 	Eater.prototype.pushArray = function(pos) {
 		return this.eater_array.push(pos);
-	}
+	};
 	
 	//Create the first tokens
 	function init_token()
@@ -299,7 +317,7 @@ $(document).ready(function(){
 		//Paint the canvas
 
 		empty_canvas();
-		for(player in players_map)
+		for(var player in players_map)
 		{
 			var current = players_map[player];
 			var array = current.eater.getEaterArray();
@@ -310,31 +328,31 @@ $(document).ready(function(){
 			var color = current.color;
 
 			//Define the head position from his direction
-			if(direction == "right") nx++;
-			else if(direction == "left") nx--;
-			else if(direction == "up") ny--;
-			else if(direction == "down") ny++;
+			if(direction == "right") nx = nx + cell_size_px;
+			else if(direction == "left") nx = nx - cell_size_px;
+			else if(direction == "up") ny = ny - cell_size_px;
+			else if(direction == "down") ny = ny + cell_size_px;
 			
 			//Check if the eater hit something
 			//if(nx == -1 || nx == width_canvas/cell_size_px || ny == -1 || ny == high_canvas/cell_size_px || check_collision(nx, ny, array))
-			if(nx == -1 || nx == width_canvas/cell_size_px || ny == -1 || ny == high_canvas/cell_size_px)
+			if(nx == -1 || nx == width_canvas || ny == -1 || ny == high_canvas  || check_collision(nx, ny))
 			{
 				delete_canvas();
 				game_over_status = true;
-				//init();
+				init();
 				socket.emit("gameOver",player_name_current);
 			}
 			if(time_over)
 			{
 				time_over = true;
 				socket.emit("timeOver");
-				//init();
+				init();
 			}
 			//Make the eater can eat a token
 			var token_eaten = false;
 			var position_to_create = 0;
 			var index = 0;
-			for(toke in token){
+			for(var toke in token){
 				index++;
 				if(nx == token[toke].x && ny == token[toke].y){
 					token_eaten =true;
@@ -371,8 +389,8 @@ $(document).ready(function(){
 		paintToken();
 
 		//Lets paint the score
-		var score_text = "Score: " + current.score;
-		ctx.fillText(direction, 500, 500);
+		var score_text = "Score: " + players_map[player_name_current].score;
+		ctx.fillText(players_map[player_name_current].direction, 500, 500);
 		ctx.fillText(score_text, 5, high_canvas-5);
 	}
 
@@ -381,12 +399,12 @@ $(document).ready(function(){
 		//Write Game Over
 		var game_over_text = "Game Over";
 		ctx.fillText(game_over_text, 20, 20);
-		init();
+		//init();
 	}
 
 	function paintToken()
 	{
-		for(tok in token)
+		for(var tok in token)
 		{
 			paint_cell(token[tok].x, token[tok].y,token[tok].value);
 		}
@@ -404,7 +422,7 @@ $(document).ready(function(){
 			var c = eaterArray[i];
 			//Paint the cells
 			paint_eater_cell(c.x, c.y, color);
-			//trace("eater drawn x=".concat(c.x," y=",c.y));
+			//trace("eater drawn x=".concat(c.x," y=",c.y, " color = ", color));
 		}
 	}
 	
@@ -434,20 +452,25 @@ $(document).ready(function(){
 	{
 		//trace("eaterpos x=".concat(x," y=",y));
 		ctx.fillStyle = color;
-		ctx.fillRect(x*cell_size_px, y*cell_size_px, cell_size_px, cell_size_px);
+		ctx.fillRect(x, y, cell_size_px, cell_size_px);
 		ctx.strokeStyle = "white";
-		ctx.strokeRect(x*cell_size_px, y*cell_size_px, cell_size_px, cell_size_px);
+		ctx.strokeRect(x, y, cell_size_px, cell_size_px);
 	}
 	
-	function check_collision(x, y, array)
+	function check_collision(x, y)
 	{
-		//Check if the eater hit something
-		for(var i = 0; i < array.length; i++)
+		var res = false;
+		//Check if the eater hit itself or another player
+		for (var pname in players_map)
 		{
-			if(array[i].x == x && array[i].y == y)
-			return true;
+			var eater_array = players_map[pname].eater.getEaterArray();
+			for(var i = 0; i < eater_array.length; i++)
+			{
+				if(eater_array[i].x == x && eater_array[i].y == y)
+				res =  true;
+			}
 		}
-		return false;
+		return res;
 	}
 	
 	//Keyboard controls
@@ -462,7 +485,7 @@ $(document).ready(function(){
 		else if(key == "39" && direction != "left") newDirection = "right";
 		else if(key == "40" && direction != "up") newDirection = "down";
 		socket.emit('direction',{'pname':player_name_current,'direction':newDirection});
-	})
+	});
 
 	function trace(text)
 	{
@@ -470,4 +493,4 @@ $(document).ready(function(){
 	}
 	
 	
-})
+});
