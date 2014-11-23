@@ -100,7 +100,10 @@ $(document).ready( function()
       command = "down";
       break;
     }
-    sendDirection(command);
+    if(command != null)
+    {
+      sendDirection(command);
+    }
   });
 });
 

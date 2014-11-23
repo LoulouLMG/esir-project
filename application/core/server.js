@@ -52,6 +52,7 @@ io.on('connection', function (socket)
   {
     console.log("Direction " + direction + " - client: " + _clientSnake.name);
     _clientSnake.direction = direction;
+    console.log(JSON.stringify(_clientSnake));
   });
 
   socket.on("disconnect", function() {
@@ -71,7 +72,11 @@ Snake = (function()
     this.id = id;
     this.name = name;
     this.reset();
-    console.log("start position: "+this.head());
+    console.log("State -----------------------------------------------");
+    //console.log(myDump(this.elements));
+    console.log(JSON.stringify(this.elements));
+    console.log("test tete position: " + this.elements[4][0] + ", " + this.elements[4][1]);
+    
   }    
 
   Snake.prototype.grow = function() 
@@ -87,6 +92,7 @@ Snake = (function()
     {
       var  result, i, rand;
       result = [];
+      // we choice to place the player on a random location on Y axis (1)
       rand = Math.floor(Math.random() * 59);
       for (i = 0; i<this.length; i++) {
         result.push([i, rand]);
@@ -237,5 +243,11 @@ checkCollisions = function() {
 
 tick = setInterval(updateState, 100);
 
+myDump = function(obj) {
+    for (var i in obj) {
+      if(i != undefined)
+        console.log(i + ": " + obj[i]);
+    }
+};
 
 
