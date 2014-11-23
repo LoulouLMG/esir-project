@@ -14,8 +14,7 @@ var client_id = 0;
 
 players = [];
 
-var WIDTH = 60;
-var HEIGHT = 60;
+var LAST_TILE_COORDONATE = 59;
 var PORT = 8090;
 
 var colorPlayer;
@@ -132,17 +131,17 @@ Snake = (function()
     // check when the player arrive near a border to respawn him on its opposite border
     if (this.elements[head][0] < 0) 
     {
-      this.elements[head][0] = WIDTH;
+      this.elements[head][0] = LAST_TILE_COORDONATE;
     }
     if (this.elements[head][1] < 0) 
     {
-      this.elements[head][1] = HEIGHT;
+      this.elements[head][1] = LAST_TILE_COORDONATE;
     }
-    if (this.elements[head][0] > WIDTH) 
+    if (this.elements[head][0] > LAST_TILE_COORDONATE) 
     {
       this.elements[head][0] = 0;
     }
-    if (this.elements[head][1] > HEIGHT) 
+    if (this.elements[head][1] > LAST_TILE_COORDONATE) 
     {
       this.elements[head][1] = 0;
     }

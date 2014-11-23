@@ -3,9 +3,9 @@
  * Configuration for: Base URL
  * This is the base url of the app.
  */
-define('BASE_URL', 'http://esir-project');
+define('URL_NODE_SOCKET', 'http://esir-project');
 define('URL', 'http://esir-project/');
-define('PORT_SOCKET', '8090');
+define('PORT_NODE_SOCKET', '8090');
 
 /**
  * Configuration for: Folders

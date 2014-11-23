@@ -8,11 +8,11 @@ $(document).ready( function()
 
   id = null;
   server = null;
-  HOST = "http://esir-project";
-  PORT = 8090;
+  HOST = data.host;
+  PORT = data.port;
 
   var client = {
-    'name' : pseudo
+    'name' : data.pseudo
   };
 
   sendDirection = function(direction) 
@@ -40,10 +40,18 @@ $(document).ready( function()
    {
       // get the number i player's snake
       snake = players[i];
-      // the client player is red while others are black
 
       //TODO : server must give a color to a gamer
-      context.fillStyle = snake.id === id ? 'rgb(51,0,204)' : 'rgb(0,0,0)';
+      if(snake.id === id)
+      {
+        current_direction = snake.direction;
+        // the client player is bleue while others are black
+        context.fillStyle = "rgb(51,0,204)";
+      }
+      else
+      {
+        context.fillStyle = "rgb(0,0,0)";
+      }
       // add its data to the result of which object will be animated
       result.push((function() 
       {
@@ -91,16 +99,28 @@ $(document).ready( function()
     key = event.which;
     switch (key) {
       case 81: // Q
-      command = "left";
+      if(current_direction != "right")
+      {
+        command = "left";
+      }
       break;
       case 90: // Z
-      command = "up";
+      if(current_direction != "down")
+      {
+        command = "up";
+      }
       break;
       case 68: // D
-      command = "right";
+      if(current_direction != "left")
+      {
+        command = "right";
+      }
       break;
       case 83: // S
-      command = "down";
+      if(current_direction != "up")
+      {
+        command = "down";
+      }
       break;
     }
     if(command != null)
