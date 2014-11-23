@@ -9,6 +9,10 @@
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
         <!-- grille du jeux -->
         <canvas id="canvas" width="600" height="600"></canvas>
+        
+        <script type="text/javascript">
+         var pseudo = <?php echo '"'.Session::get('user_name').'"'; ?>;
+        </script>
         <!-- client script -->
         <script type="text/javascript" src="<?php echo URL;?>public/js/client.js"></script> 
     </article>

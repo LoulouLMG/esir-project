@@ -1,6 +1,6 @@
 $(document).ready( function() 
 {
-  var animate, canvas, connection, context, id, sendDirection, server, PORT, HOST;
+  var animate, canvas, connection, context, id, sendDirection, server, PORT, HOST, current_direction;
 
   //Canvas stuff
   canvas = $("#canvas");
@@ -11,16 +11,15 @@ $(document).ready( function()
   HOST = "http://esir-project";
   PORT = 8090;
 
+  var client = {
+    'name' : pseudo
+  };
+
   sendDirection = function(direction) 
   {
     if (server) 
     {
-      return 
-      server.send(JSON.stringify(
-      {
-        'direction': direction
-      }
-      ));
+      return server.emit("direction", direction);
     }
   };
 
@@ -65,40 +64,43 @@ $(document).ready( function()
   connection = function() 
   {
     server = io.connect(HOST+":"+PORT);
-   
-    server.on("message", function(data) 
+    server.emit("newClient", client);
+
+    server.on("id", function(value) 
     {
-      var message;
-      message = JSON.parse(data);
-      alert("id : "+message.value);
-      switch (message.type) 
-      {
-        case 'id':   id = message.value; break;
-        case 'players':  animate(message.value); break;
-      }
+      id = value;
     });
 
-
+    server.on("update", function(list_players) 
+    {
+      animate(list_players); 
+    });
   };
+
 
   // connection established
   connection();
-  alert(id); 
+
   // return direction taken by the player.
   $(document).keydown(function(event) 
   {
-    var key;
-    key = event.keyCode ? event.keyCode : event.which;
+    var key, command;
+    key = event.which;
     switch (key) {
-      case 113: // Q
-      return sendDirection("left");
-      case 122: // Z
-      return sendDirection("up");
-      case 100: // D
-      return sendDirection("right");
-      case 115: // S
-      return sendDirection("down");
+      case 81: // Q
+      command = "left";
+      break;
+      case 90: // Z
+      command = "up";
+      break;
+      case 68: // D
+      command = "right";
+      break;
+      case 83: // S
+      command = "down";
+      break;
     }
+    sendDirection(command);
   });
 });
 
