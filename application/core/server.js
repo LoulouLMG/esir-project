@@ -25,12 +25,9 @@ var LENGTH_INIT = 5;
 
 app.listen(PORT);
 
-var test = null;
-
 /* Connections handling ********************************************************************/
 io.on('connection', function (socket) 
 {
-  test = socket;
   var _clientId, _clientSnake;
   // We give an id to the newcomer, all new id is increased
   _clientId = client_id ++;  
@@ -50,15 +47,17 @@ io.on('connection', function (socket)
 
   socket.on("direction", function(direction) 
   {
-    console.log("Direction " + direction + " - client: " + _clientSnake.name);
     _clientSnake.direction = direction;
-    console.log(JSON.stringify(_clientSnake));
   });
 
   socket.on("disconnect", function() {
-    players.remove(_clientSnake);
+    var i = players.indexOf(_clientSnake);
+    if(i != -1) 
+    {
+      players.splice(i, 1);
+    }
     console.log("Client " + _clientId + " disconnected");
-    client_id --;
+    //client_id --;
   });
 
 });
@@ -72,11 +71,6 @@ Snake = (function()
     this.id = id;
     this.name = name;
     this.reset();
-    console.log("State -----------------------------------------------");
-    //console.log(myDump(this.elements));
-    console.log(JSON.stringify(this.elements));
-    console.log("test tete position: " + this.elements[4][0] + ", " + this.elements[4][1]);
-    
   }    
 
   Snake.prototype.grow = function() 
@@ -160,17 +154,20 @@ Snake = (function()
   };
 
   // collision with other players
-  Snake.prototype.blocks = function(other) 
+  Snake.prototype.checkCollisionWith = function(other) 
   {
-    var collision, element, head, _i, _len, _ref;
-    head = other.head();
+    var collision, element, other_head, current_snake_elements;
+    other_head = other.head();
     collision = false;
-    _ref = this.elements;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) 
+    current_snake_elements = this.elements;
+    // we check the collsions on the body and the head of the snake
+    for (var i = 0, current_snake_size = current_snake_elements.length; i < current_snake_size; i++) 
     {
-      element = _ref[_i];
-      if (head[0] === element[0] && head[1] === element[1]) 
+      element = current_snake_elements[i];
+      // for each element, if another head is on the same tile of it, then the snake must kill the other snake
+      if (other_head[0] === element[0] && other_head[1] === element[1]) 
       {
+        // and their is a collision between the snake body and an other snake.
         collision = true;
       }
     }
@@ -178,12 +175,13 @@ Snake = (function()
   };
 
   // collision with ourselves
-  Snake.prototype.blocksSelf = function() 
+  Snake.prototype.checkSuicide = function() 
   {
-    var collision, head, i, _ref;
+    var collision, head;
     head = this.head();
     collision = false;
-    for (i = 0, _ref = this.length - 2; 0 <= _ref ? i <= _ref : i >= _ref; 0 <= _ref ? i++ : i--) 
+    // we check if the head's player collide with his body
+    for (var i = 0, body_size = this.length - 2; i <= body_size; i++) 
     {
       if (head[0] === this.elements[i][0] && head[1] === this.elements[i][1]) 
       {
@@ -195,7 +193,7 @@ Snake = (function()
   return Snake;
 })();
 
-/* Update Game State */
+/* Update Game State and notify players*/
 updateState = function() 
 {
   var i, nb_player;
@@ -206,8 +204,10 @@ updateState = function()
 
   checkCollisions();
   // send the list of all players to all players
-  if(test !== null)
-    test.broadcast.emit("update", players);
+  if(players.length>0)
+  {
+    io.sockets.emit("update", players);
+  }
 };
 checkCollisions = function() {
   var other, dead_players, current_player, i, j, k, nb_player, nb_dead_players, result;
@@ -216,7 +216,7 @@ checkCollisions = function() {
   for (i = 0, nb_player = players.length; i < nb_player; i++) 
   {
     current_player = players[i];
-    if (current_player.blocksSelf()) 
+    if (current_player.checkSuicide()) 
     {
       dead_players.push(current_player);
     }
@@ -225,8 +225,9 @@ checkCollisions = function() {
       other = players[j];
       if (other !== current_player) 
       {
-        if (other.blocks(current_player)) 
+        if (other.checkCollisionWith(current_player)) 
         {
+          // if player crashed against another player, the other player grows and the player dies
           dead_players.push(current_player);
           other.grow();
         }
@@ -242,12 +243,4 @@ checkCollisions = function() {
 };
 
 tick = setInterval(updateState, 100);
-
-myDump = function(obj) {
-    for (var i in obj) {
-      if(i != undefined)
-        console.log(i + ": " + obj[i]);
-    }
-};
-
 
