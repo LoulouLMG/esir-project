@@ -1,10 +1,13 @@
 $(document).ready( function() 
 {
-  var animate, canvas, connection, context, id, sendDirection, server, PORT, HOST, current_direction;
+  var animate, canvas, score_board, connection, context, id, sendDirection, server, PORT, HOST, current_direction, list_players;
 
   //Canvas stuff
   canvas = $("#canvas");
   context = canvas.get(0).getContext("2d");
+
+  //Score canva stuff
+  score_board = $("#score_board");
 
   id = null;
   server = null;
@@ -12,7 +15,26 @@ $(document).ready( function()
   PORT = data.port;
 
   var client = {
-    'name' : data.pseudo
+    "name" : data.pseudo,
+    "id" : null,
+    "color": null,
+    "score": 0
+  };
+
+  list_players = [];
+
+  updateScoreBoard = function()
+  {
+    var display = "";
+    for(var i = 0 ; i < list_players.length ; i++)
+    {
+      var player = list_players[i];
+      var score = player.score;
+      var color = player.color;
+      var name = player.name;
+      display += "<li><font color=" + color + ">" + name + ": " + score +"</font></li>\n";
+    }
+    score_board.html("<ul>"+display+"</ul>");
   };
 
   sendDirection = function(direction) 
@@ -61,18 +83,12 @@ $(document).ready( function()
    {
       // get the number i player's snake
       snake = players[i];
-
-      //TODO : server must give a color to a gamer
       if(snake.id === id)
       {
         current_direction = snake.direction;
-        // the client player is bleue while others are black
-        context.fillStyle = "rgb(51,0,204)";
       }
-      else
-      {
-        context.fillStyle = "rgb(0,0,0)";
-      }
+      // color of player
+      context.fillStyle = snake.color;
       // add its data to the result of which object will be animated
       result.push((function() 
       {
@@ -96,20 +112,21 @@ $(document).ready( function()
   connection = function() 
   {
     server = io.connect(HOST+":"+PORT);
-    server.emit("newClient", client);
+    server.emit("client", client.name);
 
-    server.on("id", function(value) 
+    server.on("confirm", function(data) 
     {
-      id = value;
+      client.id = data.id;
+      client.color = data.color;
     });
 
-    server.on("update", function(list_players) 
+    server.on("update", function(entities) 
     {
-      animate(list_players); 
+      list_players = entities.players;
+      animate(entities);
+      updateScoreBoard(); 
     });
   };
-
-
   // connection established
   connection();
 

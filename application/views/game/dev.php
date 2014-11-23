@@ -7,8 +7,11 @@
         <!-- librairie -->
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+        <h2 id = score />
         <!-- grille du jeux -->
         <canvas id="canvas" width="600" height="600"></canvas>
+        <!-- grille du des scores -->
+        <div id="score_board"></div>
         
         <?php
             $data = array(

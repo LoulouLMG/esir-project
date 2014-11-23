@@ -83,16 +83,24 @@ Token = (function()
 Snake = (function() 
 {
   // constructor
-  function Snake(id, name) 
+  function Snake(id, name, color) 
   {
+    this.color = color;
+    this.score = 0;
     this.id = id;
     this.name = name;
     this.reset();
   }    
 
-  Snake.prototype.grow = function() 
+  Snake.prototype.grow = function(points) 
   {
-    return this.length = this.elements.unshift([-1, -1]);
+    for(var i = 0; i < points; i++)
+    {
+      // add the tail on fake coordonnates to not display it on the map
+      this.length = this.elements.unshift([-1, -1]);
+    }
+    // increase score with each grow
+    this.score += points * 10; 
   };
 
   // init a snake in a random position
@@ -204,10 +212,7 @@ Snake = (function()
      
       if (head[0] === token.position[0] && head[1] === token.position[1]) 
       {
-        for(var i = 0 ; i < token.type.worth ; i++)
-        {
-          this.grow();
-        }
+        this.grow(token.type.worth);
         token.init();
       }
     }
@@ -243,6 +248,7 @@ var io = require('socket.io')(app);
 var fs = require('fs');
 
 var client_id = 0;
+var client_color = null;
 
 players = [];
 tokens = [];
@@ -298,19 +304,23 @@ for(var i = 0; i < NB_TOKENS; i++)
 /* Connections handling ***************************************************************************************************/
 io.on('connection', function (socket) 
 {
-  var _clientId, _clientSnake;
+  var _clientId, _clientSnake, _data_client;
   // We give an id to the newcomer, all new id is increased
-  _clientId = client_id ++;  
-  // the server send his id to the client
-  socket.emit("id", _clientId);
-  //console.log("Tokens: " + JSON.stringify(tokens));
-  console.log("Client connected");
+  _clientId = client_id ++;
+  client_color = getRandomColor();
+  var _data_client = {
+    "id" : _clientId,
+    "color" : client_color
+  };  
+  // the server send his id, color and score to the client
+  socket.emit("confirm", _data_client);
+  console.log("Client " + _data_client.color + "connected");
 
-  socket.on("newClient", function(client) 
+  socket.on("client", function(name) 
   {
-    console.log("Client " + _clientId + " is:" + client.name);
+    console.log("Client " + _clientId + " is:" + name);
     // A snake is attributed to the new client
-    _clientSnake = new Snake(_clientId, client.name);
+    _clientSnake = new Snake(_clientId, name, client_color);
     // the new snake is added to the list
 
     players.push(_clientSnake);
@@ -375,7 +385,7 @@ checkCollisions = function() {
         {
           // if player crashed against another player, the other player grows and the player dies
           dead_players.push(current_player);
-          other.grow();
+          other.grow(6);
         }
       }
     }
@@ -388,6 +398,15 @@ checkCollisions = function() {
   }
   return result;
 };
+
+function getRandomColor() {
+    var letters = '0123456789ABCDEF'.split('');
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
 
 checkTokenLifeSpan = function() 
 {
