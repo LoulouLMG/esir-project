@@ -28,9 +28,9 @@ $(document).ready( function()
   {
     var element, snake, x, y, nb_player, result;
     context.fillStyle = 'rgb(230,230,230)';
-    for (x = 0; x <= 69; x++) 
+    for (x = 0; x <= 59; x++) 
     {
-      for (y = 0; y <= 69; y++) 
+      for (y = 0; y <= 59; y++) 
       {
        context.fillRect(x * 10, y * 10, 9, 9);
      }
@@ -40,7 +40,10 @@ $(document).ready( function()
    {
       // get the number i player's snake
       snake = players[i];
-      context.fillStyle = snake.id === id ? 'rgb(170,0,0)' : 'rgb(0,0,0)';
+      // the client player is red while others are black
+
+      //TODO : server must give a color to a gamer
+      context.fillStyle = snake.id === id ? 'rgb(51,0,204)' : 'rgb(0,0,0)';
       // add its data to the result of which object will be animated
       result.push((function() 
       {

@@ -14,8 +14,8 @@ var client_id = 0;
 
 players = [];
 
-var WIDTH = 600;
-var HEIGHT = 600;
+var WIDTH = 60;
+var HEIGHT = 60;
 var PORT = 8090;
 
 var colorPlayer;
