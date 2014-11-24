@@ -6,9 +6,11 @@ var fs = require('fs');
 var width_canvas = 600;
 var high_canvas = 600;
 var cell_size_px = 20;
-
+//The map of all the player socket
 var playerSocket = {};
+//The status of all the players (if ready or not)
 var playerStatus = {};
+//The direction of all the players
 var playersDirection = {};
 var colorPlayer;
 var posBegin;
@@ -18,58 +20,69 @@ var PORT = 8090;
 
 app.listen(PORT);
 
+//If there is a problem return to the "accueil" page
 function handler (req, res) {
   fs.window.location("<?php echo URL?>");
 }
 
+//The communication between the server and the client
 io.sockets.on('connection', function (socket) {
   console.log('Un client est connecté !');
+  //When a new client is connected add him
   socket.on('init', function (data) {
     playerSocket[data] = socket;
     playerStatus[data] = false;
     console.log('recu', data);
     notifyInitEverybody(data);
   });
+  //When a player is ready
   socket.on('ready', function (data) {
     console.log('ready', data);
     playerStatus[data] = true;
     notifyReadyEverybody(data);
+    //Check that if all players are ready or not
     if(checkAllReady())
     {
-      //Re init for new game
+      //If all players are ready re init for new game
       colorPlayer = ['Peru','Orange','Purple','OliveDrab'];
       posBegin = [[0,0],[width_canvas-cell_size_px-2,high_canvas-cell_size_px-2]];
-      //posBegin = [[width_canvas-cell_size_px-2,high_canvas-cell_size_px-2],[width_canvas-cell_size_px-2,high_canvas-cell_size_px-2]];
-      //posBegin = [[0,0],[0,0]];
+      //Generate the token map
       var tokentMap = generateMap();
       notifyBeginEverybody(tokentMap);
       timeOver = false;
+      //Launch the game
       run();
     }
   });
-  socket.on('trace', function (data) {
-    console.log('trace de',data.pname,' message ',data.text);
-  });
+  //When a player disconnect the game remove him
   socket.on('disconnect', function() {
     var parti = getNameBySocket(socket);
     delete playerSocket[parti];
     console.log('leave',parti);
+    //Notify whose player has leaved
     notifyLeaveEverybody(parti);
   });
+  //When a player move
   socket.on('direction',function (data) {
     sendDirection(data.pname,data.direction);
   });
+  //When a player eat a token
   socket.on('eaten', function (data) {
+    //Create a new one
     create_token(data);
   });
+  //When the time is over
   socket.on('timeOver', function (data) {
     timeOver = true;
   });
+  //When a player hit another player or the canvas borders
   socket.on('gameOver', function (data) {
+    //Set him like not ready to not send him to redraw his canvas
     playerStatus[data] = false;
   });
 });
 
+//Launch the game, until the is time is over the server send draw
 function run()
 {
   if(!timeOver)
@@ -87,6 +100,7 @@ function run()
   }
 }
 
+//Tell to all players to draw their canvas
 function sendDraw()
 {
   if (!timeOver)
@@ -102,6 +116,7 @@ function sendDraw()
   }
 }
 
+//Get the name of a player from his socket
 function getNameBySocket(socket)
 {
   for(var key in playerSocket)
@@ -114,17 +129,18 @@ function getNameBySocket(socket)
   }
 }
 
+//Set the direction of a player
 function sendDirection(playerName,direction)
 {
   playersDirection[playerName] = direction;
 }
 
-//Quand un nouveau joueur se connecte
+//When a new player is connected
 function notifyInitEverybody(data)
 {
   for(var player in playerSocket)
   {
-    //Renvoie le nouveau joueur à tous les autres joueurs présents
+    //Tell to all others player that a new player is here
     if(player !== data)
     {
       var sock = playerSocket[player];
@@ -133,7 +149,7 @@ function notifyInitEverybody(data)
     }
     else
     {
-      //Envoie au nouveau joueur la liste des joueurs déjà présents
+      //Send to the new playe the list of all ohter players
       for(player in playerSocket)
       {
         if(player !== data)
@@ -147,7 +163,7 @@ function notifyInitEverybody(data)
   }
 }
 
-//Envoie à tout le monde le nom du joueur parti
+//Send to everyone the name of the player who are leaving
 function notifyLeaveEverybody(parti)
 {
   for(var player in playerSocket)
@@ -157,7 +173,7 @@ function notifyLeaveEverybody(parti)
   }
 }
 
-//Notify everyone that a new player is readyy
+//Notify everyone that a new player is ready
 function notifyReadyEverybody(namePlayerReady)
 {
   notifyOther(namePlayerReady,sendReady);
@@ -202,6 +218,7 @@ function notifyBeginEverybody(map)
     console.log('color ',color,' ,pos ',pos);
     config_init[player] = {'map':map,'color':color,'pos':pos};
   }
+  //Send to everyone the position,the color of everyone and the map
   for(var oplayer in playerSocket)
   {
     var sock = playerSocket[oplayer];
@@ -287,6 +304,7 @@ function define_token_type()
   return value;
 }
 
+//Give the next color available from the list
 function giveNextColor()
 {
   var colorSelected = colorPlayer[0];
@@ -294,6 +312,7 @@ function giveNextColor()
   return colorSelected;
 }
 
+//Give the next position available from the list
 function giveNextPos()
 {
   var posSelected = posBegin[0];

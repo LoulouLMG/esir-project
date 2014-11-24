@@ -234,19 +234,10 @@ $(document).ready(function(){
 	{
 		ctx.fillStyle = "black";
 		ctx.fillRect(x*cell_size_px, y*cell_size_px, cell_size_px, cell_size_px);
-		//draw_dwarf(x, y);
 		ctx.strokeStyle = "white";
 		ctx.strokeRect(x*cell_size_px, y*cell_size_px, cell_size_px, cell_size_px);
 	}
 
-	function draw_dwarf(x, y)
-	{
-		dwarf_image = new Image();
-		dwarf_image.onload = function(){
-			ctx.drawImage(dwarf_image, x, y);
-		};
-		dwarf_image.src = 'pacman.png';
-	}
 	
 	function check_collision(x, y, array)
 	{
