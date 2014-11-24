@@ -1,6 +1,13 @@
+var CELL_SIZE = 10;
+
 $(document).ready( function() 
 {
   var animate, canvas, score_board, connection, context, id, sendDirection, server, PORT, HOST, current_direction, list_players;
+
+  var client_timer = $("#timer");
+  var game_timer = 0;
+  var counter =null;
+ 
 
   //Canvas stuff
   canvas = $("#canvas");
@@ -45,6 +52,31 @@ $(document).ready( function()
     }
   };
 
+  sendReady = function()
+  {
+    if (server) 
+    {
+      return server.emit("ready");
+    }
+  };
+
+  function startTimer()
+  {
+    counter = setInterval(timer,1000);
+  }
+
+  function timer()
+  {
+    game_timer --;
+    if (game_timer == 0)
+    {
+      console.log(game_timer);
+      clearInterval(counter);
+      return;
+    }
+    client_timer.html("<span style=\"font-weight:bolder\">"+game_timer+"</span>");
+  }
+
   // animes all the other players
   animate = function(entities) 
   {
@@ -52,18 +84,23 @@ $(document).ready( function()
     var players = entities.players;
     var tokens = entities.tokens;
     context.fillStyle = 'rgb(230,230,230)';
+    if(client.color != null)
+    {
+      context.strokeStyle = client.color;
+    } 
+    
     for (x = 0; x <= 59; x++) 
     {
       for (y = 0; y <= 59; y++) 
       {
        context.fillRect(x * 10, y * 10, 9, 9);
-     }
+     }  
    }
    result = [];
    
    // display tokens
-    for (var i = 0, nb_tokens = tokens.length; i < nb_tokens; i++) 
-    {
+   for (var i = 0, nb_tokens = tokens.length; i < nb_tokens; i++) 
+   {
       // get the number i player's snake
       token = tokens[i];
       context.fillStyle = token.type.color;
@@ -77,13 +114,12 @@ $(document).ready( function()
         context.fillRect(x, y, 9, 9);
       })();
     } 
-
     //display players
-   for (var i = 0, nb_player = players.length; i < nb_player; i++) 
-   {
+    for (var i = 0, nb_player = players.length; i < nb_player; i++) 
+    {
       // get the number i player's snake
       snake = players[i];
-      if(snake.id === id)
+      if(snake.id === client.id)
       {
         current_direction = snake.direction;
       }
@@ -126,9 +162,26 @@ $(document).ready( function()
       animate(entities);
       updateScoreBoard(); 
     });
+
+    server.on("start", function(timer) 
+    {
+      game_timer = timer;
+      startTimer();  
+    });
+
+    server.on("stop", function(winner) 
+    {
+      alert("Partie Terminee");
+      client_timer.html("<span style=\"font-weight:bolder\">Le vainqueur est : "+winner+"</span>");
+    });
   };
+
   // connection established
   connection();
+
+
+  
+  
 
   // return direction taken by the player.
   $(document).keydown(function(event) 
@@ -167,3 +220,5 @@ $(document).ready( function()
     }
   });
 });
+
+

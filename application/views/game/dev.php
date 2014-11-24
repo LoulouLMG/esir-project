@@ -1,5 +1,5 @@
 <div class="content">
-    <h1>TEST</h1>
+    <h1>Super Snake Multi</h1>
     <article>
         <!-- echo out the system feedback (error and success messages) -->
         <?php $this->renderFeedbackMessages(); ?>
@@ -7,11 +7,13 @@
         <!-- librairie -->
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-        <h2 id = score />
+        <!-- timer du jeux -->
+        <h2  id="timer"/></h2>
         <!-- grille du jeux -->
         <canvas id="canvas" width="600" height="600"></canvas>
         <!-- grille du des scores -->
         <div id="score_board"></div>
+        
         
         <?php
             $data = array(
@@ -20,6 +22,9 @@
             "port" => PORT_NODE_SOCKET
             );
         ?>
+
+        <button onclick="sendReady();">Ready</button>
+
         <script type="text/javascript">
             var data = <?php echo json_encode($data, JSON_PRETTY_PRINT) ?>;
         </script>
