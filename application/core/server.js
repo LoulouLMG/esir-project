@@ -1,3 +1,6 @@
+var Player = require('./player.js');
+var Snake_ = require('./snake.js');
+
 /* Token Class ********************************************************************************************************/
 Token = (function() 
 {
@@ -310,7 +313,7 @@ var LAST_TILE_COORDONATE = 59;
 var LENGTH_INIT = 1;
 var PORT = 8090;
 var NB_TOKENS = 15;
-var TIMER = 10;
+var TIMER = 60;
 var game_timer;
 var session = false;
 
@@ -334,6 +337,10 @@ io.on('connection', function (socket)
     "ready": false,
     "color" : client_color
   };  
+
+  var toto = new Player("BULBIZZAR");
+  console.log(JSON.stringify(toto));
+
   // the server send his id, color and score to the client
   socket.emit("confirm", _data_client);
   console.log("Client " + _data_client.color + "connected");
@@ -496,6 +503,7 @@ startGame = function()
 var counter = null;
 function startTimer()
 { 
+
   game_timer = TIMER;
   console.log("Nouvelle partie");
   counter = setInterval(timer,1000);

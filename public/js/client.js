@@ -39,7 +39,11 @@ $(document).ready( function()
       var score = player.score;
       var color = player.color;
       var name = player.name;
-      display += "<li><font color=" + color + ">" + name + ": " + score +"</font></li>\n";
+      var ready = player.ready ? " ready !" : "";
+      console.log(player.name+" READY ?" + ready);
+      var strong_G = ready ? "<strong>" :"";
+      var strong_D = ready ? "</strong>" :"";
+      display += "<li><font color=" + color + ">" + strong_G + name + ": " + score + "\t" + ready + strong_D +"</font></li>\n";
     }
     score_board.html("<ul>"+display+"</ul>");
   };
@@ -171,7 +175,6 @@ $(document).ready( function()
 
     server.on("stop", function(winner) 
     {
-      alert("Partie Terminee");
       client_timer.html("<span style=\"font-weight:bolder\">Le vainqueur est : "+winner+"</span>");
     });
   };
