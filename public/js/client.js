@@ -1,3 +1,4 @@
+
 var CELL_SIZE = 10;
 
 $(document).ready( function() 
@@ -40,7 +41,6 @@ $(document).ready( function()
       var color = player.color;
       var name = player.name;
       var ready = player.ready ? " ready !" : "";
-      console.log(player.name+" READY ?" + ready);
       var strong_G = ready ? "<strong>" :"";
       var strong_D = ready ? "</strong>" :"";
       display += "<li><font color=" + color + ">" + strong_G + name + ": " + score + "\t" + ready + strong_D +"</font></li>\n";
@@ -123,9 +123,11 @@ $(document).ready( function()
     {
       // get the number i player's snake
       snake = players[i];
+      console.log("snake id : "+ snake.id+ " ---- client id :"+ client.id);
       if(snake.id === client.id)
       {
         current_direction = snake.direction;
+        console.log("direction : "+current_direction);
       }
       // color of player
       context.fillStyle = snake.color;
@@ -191,6 +193,7 @@ $(document).ready( function()
   {
     var key, command;
     key = event.which;
+    
     switch (key) {
       case 81: // Q
       if(current_direction != "right")

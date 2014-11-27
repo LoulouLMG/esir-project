@@ -1,109 +1,174 @@
+/* Configuration constants loaded here **********************************************************************************/
+var config = require('./config.js');
+/* we get the last coordoate of the map */
+var nb_tile_Y = config.nb_tile_height;
+var nb_tile_X = config.nb_tile_width;
+/* End configuration constants loaded here ******************************************************************************/
 /* Snake Class **********************************************************************************************************/
 module.exports = function Snake() 
 {
-   // constructor
-  function Snake(id, name, color) 
-  {
-    this.id = id;
-    this.name = name;
-    this.color = color;
-    this.score = 0;
-    this.ready = false;
-    this.reset();
-  }    
+   // constructor Snake must receives {color:XXXX, length:XX}
+   function Snake(init_data) 
+   {
+     /* To make attributes explicit */    
+     this.color = init_data.color;
+     this.length = init_data.length;
+     this.direction = null;
+     this.score = 0;
+     /* Initialize the position on the map */
+     this.init();
+   }    
 
+  /**
+  * Perform length gaining and score calculating
+  */
   Snake.prototype.grow = function(points) 
   {
     for(var i = 0; i < points; i++)
     {
       // add the tail on fake coordonnates to not display it on the map
-      this.length = this.elements.unshift([-1, -1]);
+      // increase the size of the snake by 1 tile.
+      this.length = this.elements.unshift({"X":-1, "Y":-1});
     }
     // increase score with each grow
     this.score += points * 10; 
   };
 
-  // init a snake in a random position
-  Snake.prototype.reset = function() 
+  /**
+  * init a snake in a random position
+  */ 
+  Snake.prototype.init = function() 
   {
-    this.length = LENGTH_INIT;
-    this.direction = "right";
+    //TODO : PREVENT SPAWNING ON ANOTHER ENTITY
     this.elements = (function() 
     {
-      var  result, i, rand;
-      result = [];
-      // we choice to place the player on a random location on Y axis (1)
-      rand = Math.floor(Math.random() * LAST_TILE_COORDONATE);
-      for (i = 0; i<this.length; i++) {
-        result.push([i, rand]);
+      var  result =[], rand_tile, border;
+      /* Determine on which border will spawn the snake with its appropriate
+         direction (opposite of the border)
+      */
+      border = (function ()
+      {
+        var rand_border = Math.floor(Math.random() * 4);
+        console.log("random border: " + rand_border);
+        switch(rand_border)
+        {
+          case 0: 
+          this.direction = "right" ; 
+          return {
+            side:"LEFT",
+            axe: "Y"
+          };
+          case 1: 
+          this.direction = "down" ;
+          return {
+            side:"TOP",
+            axe: "X"
+          };
+          case 2: 
+          this.direction = "left" ;
+          return {
+            side:"RIGHT",
+            axe: "Y"
+          };
+          case 3: 
+          this.direction = "up" ;
+          return {
+            side:"BOTTOM",
+            axe: "X"
+          };
+        }
+      }).call(this);
+      console.log(JSON.stringify(border));
+      // we choice to place the player on a random tile of the given border 
+      rand_tile = Math.floor(Math.random() * (border.axe == "X" ? nb_tile_X : nb_tile_Y));
+      for (var i = 0; i<this.length; i++) 
+      {
+        if(border.axe == "X")
+        {
+          result.push({ "X" : rand_tile, "Y" : i});
+        } 
+        else
+        {
+          result.push({ "X" : i, "Y" : rand_tile});
+        }
       }
       return result;
     }).call(this);
   };
 
+  /**
+  * Reorganize the snake each new ticks 
+  */
   Snake.prototype.update = function() 
   {
-    var i, snake_body;
-    for (i = 0, snake_body = this.length - 2;  i <= snake_body; i++) 
+    // first update the body without the head
+    for (var i = 0, snake_body = this.length - 2;  i <= snake_body; i++) 
     {
       this.moveBody(i);
     }
-    return this.moveHead();
+    // then update the head
+    this.moveHead();
   };
 
+  /**
+  * Move a given element of the snake body to its previous sibling position
+  * @param i : index of element to be moved
+  */
   Snake.prototype.moveBody = function(i) 
   {
-    this.elements[i][0] = this.elements[i + 1][0];
-    this.elements[i][1] = this.elements[i + 1][1];
+    this.elements[i]["X"] = this.elements[i + 1]["X"];
+    this.elements[i]["Y"] = this.elements[i + 1]["Y"];
   };
 
+  /**
+  * Set the new position of the head following the current direction
+  */
   Snake.prototype.moveHead = function() 
   {
-    var head;
-    head = this.length - 1;
+    var index_head;
+    // index of the head
+    index_head = this.length - 1;
+    // move the head in function of the current direction
     switch (this.direction) 
     {
       case "left":
-      this.elements[head][0] -= 1;
+      this.elements[index_head]["X"] -= 1;
       break;
       case "right":
-      this.elements[head][0] += 1;
+      this.elements[index_head]["X"] += 1;
       break;
       case "up":
-      this.elements[head][1] -= 1;
+      this.elements[index_head]["Y"] -= 1;
       break;
       case "down":
-      this.elements[head][1] += 1;
+      this.elements[index_head]["Y"] += 1;
     }
     // check when the player arrive near a border to respawn him on its opposite border
-    if (this.elements[head][0] < 0) 
+    if (this.elements[index_head]["X"] < 0) 
     {
-      this.elements[head][0] = LAST_TILE_COORDONATE;
+      this.elements[index_head]["X"] = nb_tile_X;
     }
-    if (this.elements[head][1] < 0) 
+    if (this.elements[index_head]["Y"] < 0) 
     {
-      this.elements[head][1] = LAST_TILE_COORDONATE;
+      this.elements[index_head]["Y"] = nb_tile_Y;
     }
-    if (this.elements[head][0] > LAST_TILE_COORDONATE) 
+    if (this.elements[index_head]["X"] > nb_tile_X) 
     {
-      this.elements[head][0] = 0;
+      this.elements[index_head]["X"] = 0;
     }
-    if (this.elements[head][1] > LAST_TILE_COORDONATE) 
+    if (this.elements[index_head]["Y"] > nb_tile_Y) 
     {
-      this.elements[head][1] = 0;
+      this.elements[index_head]["Y"] = 0;
     }
   };
 
-  Snake.prototype.head = function() 
-  {
-    return this.elements[this.length - 1];
-  };
-
-  // collision with other players
-  Snake.prototype.checkCollisionWithPlayer = function(other) 
+  /**
+  * Calcul collision with others snakes
+  */
+  Snake.prototype.checkCollisionWithPlayer = function(other_snake) 
   {
     var collision, element, other_head, current_snake_elements;
-    other_head = other.head();
+    other_head = other_snake.getHead();
     collision = false;
     current_snake_elements = this.elements;
     // we check the collsions on the body and the head of the snake
@@ -111,13 +176,76 @@ module.exports = function Snake()
     {
       element = current_snake_elements[i];
       // for each element, if another head is on the same tile of it, then the snake must kill the other snake
-      if (other_head[0] === element[0] && other_head[1] === element[1]) 
+      if (other_head["X"] === element["X"] && other_head["Y"] === element["Y"]) 
       {
-        // and their is a collision between the snake body and an other snake.
+        // and there is a collision between the snake body and an other snake.
         collision = true;
       }
     }
     return collision;
-  }
+  };
+
+  /**
+  * Calcul collision with tokens
+  */
+  Snake.prototype.checkCollisionWithToken = function() 
+  {
+    var collision, element, token, head;
+    head = this.head();
+    for (var i = 0, nb_token = tokens.length; i < nb_token; i++) 
+    {
+      token = tokens[i];
+      if (head["X"] === token.position["X"] && head["Y"] === token.position["Y"]) 
+      {
+        // if collision with a token the snake grows
+        this.grow(token.type.worth);
+        // token is reset
+        token.init();
+      }
+    }
+  };
+
+  /**
+  * Calcul collision with the snake itself
+  */
+  Snake.prototype.checkSuicide = function() 
+  {
+    var collision, head;
+    head = this.getHead();
+    collision = false;
+    // we check if the head's player collide with his body
+    for (var i = 0, body_size = this.length - 2; i <= body_size; i++) 
+    {
+      if (head["X"] === this.elements[i]["X"] && head["Y"] === this.elements[i]["Y"]) 
+      {
+        collision = true;
+      }
+    }
+    return collision;
+  };
+  /* Getters and setters *********************************************************************************************/
+  /* They are only here for providing an explicit API since properties aren't private */
+  Snake.prototype.getHead = function() 
+  {
+    return this.elements[this.length - 1];
+  };
+
+  Snake.prototype.getDirection = function() 
+  {
+    return this.direction;
+  };
+
+  Snake.prototype.getScore = function() 
+  {
+    return this.score;
+  };
+
+  Snake.prototype.getColor = function() 
+  {
+    return this.color;
+  };
+  /* End Getters and setters */
+  //return the referece of the new "object"
   return Snake;
 }();
+/* End Snake Class ******************************************************************************************************/

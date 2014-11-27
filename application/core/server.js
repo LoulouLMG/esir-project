@@ -1,5 +1,5 @@
-var Player = require('./player.js');
-var Snake_ = require('./snake.js');
+var _Player = require('./player.js');
+var _Snake = require('./snake.js');
 
 /* Token Class ********************************************************************************************************/
 Token = (function() 
@@ -338,8 +338,17 @@ io.on('connection', function (socket)
     "color" : client_color
   };  
 
-  var toto = new Player("BULBIZZAR");
-  console.log(JSON.stringify(toto));
+  var toto = new _Player("BULBIZZAR");
+  console.log("Player : "+JSON.stringify(toto));
+  var init_sanke = {
+    id: 1,
+    color: "rouge",
+    length: 8
+  }
+  var titi = new _Snake(init_sanke);
+  console.log("Snake : "+JSON.stringify(titi));
+  toto.setSnake(titi);
+  console.log("Player + Snake :"+JSON.stringify(toto));
 
   // the server send his id, color and score to the client
   socket.emit("confirm", _data_client);
