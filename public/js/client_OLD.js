@@ -1,3 +1,6 @@
+
+var CELL_SIZE = 10;
+
 $(document).ready( function() 
 {
   var animate, canvas, score_board, connection, context, id, sendDirection, server, PORT, HOST, current_direction, list_players;
@@ -21,6 +24,9 @@ $(document).ready( function()
 
   var client = {
     "name" : data.pseudo,
+    "id" : null,
+    "color": null,
+    "score": 0
   };
 
   list_players = [];
@@ -31,10 +37,10 @@ $(document).ready( function()
     for(var i = 0 ; i < list_players.length ; i++)
     {
       var player = list_players[i];
-      var score = player._score;
-      var color = player._snake._color;
-      var name = player._name;
-      var ready = player._ready ? " ready !" : "";
+      var score = player.score;
+      var color = player.color;
+      var name = player.name;
+      var ready = player.ready ? " ready !" : "";
       var strong_G = ready ? "<strong>" :"";
       var strong_D = ready ? "</strong>" :"";
       display += "<li><font color=" + color + ">" + strong_G + name + ": " + score + "\t" + ready + strong_D +"</font></li>\n";
@@ -78,10 +84,14 @@ $(document).ready( function()
   // animes all the other players
   animate = function(entities) 
   {
-    var element, snake, player, x, y, result;
+    var element, snake, x, y, result;
     var players = entities.players;
     var tokens = entities.tokens;
     context.fillStyle = 'rgb(230,230,230)';
+    if(client.color != null)
+    {
+      context.strokeStyle = client.color;
+    } 
     
     for (x = 0; x <= 59; x++) 
     {
@@ -97,14 +107,14 @@ $(document).ready( function()
    {
       // get the number i player's snake
       token = tokens[i];
-      context.fillStyle = token._type.color;
+      context.fillStyle = token.type.color;
       
       // add its data to the result of which object will be animated
       (function() 
       {
-        position = token._position;
-        x = position.X * 10;
-        y = position.Y * 10;
+        position = token.position;
+        x = position[0] * 10;
+        y = position[1] * 10;
         context.fillRect(x, y, 9, 9);
       })();
     } 
@@ -112,26 +122,26 @@ $(document).ready( function()
     for (var i = 0, nb_player = players.length; i < nb_player; i++) 
     {
       // get the number i player's snake
-      player = players[i];
-      snake = player._snake;
-      if(player._name === client.name)
+      snake = players[i];
+      console.log("snake id : "+ snake.id+ " ---- client id :"+ client.id);
+      if(snake.id === client.id)
       {
-        current_direction = snake._direction;
+        current_direction = snake.direction;
         console.log("direction : "+current_direction);
       }
       // color of player
-      context.fillStyle = snake._color;
+      context.fillStyle = snake.color;
       // add its data to the result of which object will be animated
       result.push((function() 
       {
         var snake_length, snake_elements, temp_result;
-        snake_elements = snake._elements;
+        snake_elements = snake.elements;
         temp_result = [];
         for (j = 0, snake_length = snake_elements.length; j < snake_length; j++) 
         {
           element = snake_elements[j];
-          x = element.X * 10;
-          y = element.Y * 10;
+          x = element[0] * 10;
+          y = element[1] * 10;
           temp_result.push(context.fillRect(x, y, 9, 9));
         }
         return temp_result;
@@ -145,6 +155,12 @@ $(document).ready( function()
   {
     server = io.connect(HOST+":"+PORT);
     server.emit("client", client.name);
+
+    server.on("confirm", function(data) 
+    {
+      client.id = data.id;
+      client.color = data.color;
+    });
 
     server.on("update", function(entities) 
     {
@@ -163,17 +179,15 @@ $(document).ready( function()
     {
       client_timer.html("<span style=\"font-weight:bolder\">Le vainqueur est : "+winner+"</span>");
     });
-
-    server.on("disconnect", function(winner) 
-    {
-      client_timer.html("<span style=\"font-weight:bolder\">Disconnected !</span>");
-    });
   };
 
   // connection established
   connection();
 
+
   
+  
+
   // return direction taken by the player.
   $(document).keydown(function(event) 
   {
@@ -181,7 +195,7 @@ $(document).ready( function()
     key = event.which;
     
     switch (key) {
-      case (81||37): // Q
+      case 81: // Q
       if(current_direction != "right")
       {
         command = "left";
@@ -212,5 +226,3 @@ $(document).ready( function()
     }
   });
 });
-
-
