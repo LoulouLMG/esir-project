@@ -163,11 +163,11 @@ module.exports = function Snake()
     // check when the player arrive near a border to respawn him on its opposite border
     if (this._elements[index_head].X < 0) 
     {
-      this._elements[index_head].X = nb_tile_X;
+      this._elements[index_head].X = nb_tile_X-1;
     }
     if (this._elements[index_head].Y < 0) 
     {
-      this._elements[index_head].Y = nb_tile_Y;
+      this._elements[index_head].Y = nb_tile_Y-1;
     }
     if (this._elements[index_head].X > nb_tile_X-1) 
     {
