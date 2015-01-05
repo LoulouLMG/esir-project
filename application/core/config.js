@@ -4,6 +4,7 @@ module.exports = {
 	 nb_tile_width : 60,
 	 length_init: 1,
 	 server_port: 8090,
+	 server_backup_port: 8091,
 	 game_timer: 10,
 	 tick_rate: 50,
 	 token_number: 15,

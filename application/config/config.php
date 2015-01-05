@@ -6,6 +6,7 @@
 define('URL_NODE_SOCKET', 'http://esir-project');
 define('URL', 'http://esir-project/');
 define('PORT_NODE_SOCKET', '8090');
+define('PORT_NODE_SOCKET_BACKUP', '8091');
 
 /**
  * Configuration for: Folders
