@@ -1,5 +1,5 @@
 /************************************************************************************************************************/
-/*@Authors  Solofeed, ErwanTrain                                                                                        */
+/*@Authors  Solofeed, ErwanTrain  
 /* Configuration constants loaded here **********************************************************************************/
 var config = require('./config.js');
 /* we get the last coordonate of the map */
@@ -18,6 +18,122 @@ var Snake = require('./snake.js');
 var Token = require('./token.js');
 /* End configuration constants loaded here ******************************************************************************/
 /************************************************************************************************************************/
+/* global server variable for store players and tokens */
+_PLAYER_LIST = [];
+_TOKEN_LIST = [];
+
+
+var _WRAP = {
+  players: _PLAYER_LIST,
+  tokens: _TOKEN_LIST
+}
+
+/* Start server idle ****************************************************************************************************/
+var master = require('././node_modules/socket.io/node_modules/socket.io-client');
+
+var startBackup = false;
+var compteur = 0
+var _WRAP_RECEIVED = null;
+
+backUp = function() 
+{
+  var socket = master.connect('http://esir-project:8090');
+
+  socket.on('connect', function () 
+  { 
+    console.log("Connected to Master server ! ");
+    socket.emit('slave');
+  });
+
+  socket.on('updateSlave', function (data) 
+  { 
+
+    compteur++
+    if(compteur>40)
+    {
+      console.log(JSON.stringify(data));
+      compteur = 0;
+    }
+    _WRAP_RECEIVED = data;
+  });
+
+  socket.on('disconnect', function () 
+  { 
+    console.log("Main Server is down, initialisation ...")
+    startBackup = true;
+    fillWrap();
+    console.log("Running ...")
+  });
+};
+// connection established
+backUp();
+
+
+fillWrap = function()
+{
+  fillPlayerList()
+  fillTokenList();
+};
+
+fillPlayerList = function()
+{
+  for(var i=0; i< _WRAP_RECEIVED.players.length; i++)
+  {
+    var player_received = _WRAP_RECEIVED.players[i];
+    var newPlayer = new Player(player_received._name);
+    newPlayer._score = player_received._score;
+    newPlayer._ready = player_received._ready;
+    var snake_received = player_received._snake;
+
+    var newSnake = new Snake(
+    {
+      color: snake_received._color,
+      dimension: length_init
+    }
+    );
+    newSnake._length = snake_received._length;
+    newSnake._direction = snake_received._direction;
+    newSnake._score = snake_received._score;
+    newSnake._elements = (function()
+    {
+      var result = [];
+      for(var j=0; j<snake_received._elements.length;j++)
+      {
+        var k = snake_received._elements[i];
+        var x = k.X;
+        var y = k.Y; 
+        result.push({"X": x,"Y": y})
+      }
+      return result;
+    }).call(this);
+
+    newPlayer.setSnake(newSnake);
+    _PLAYER_LIST.push(newPlayer);
+  }
+};
+
+fillTokenList = function()
+{
+  for(var i=0; i< _WRAP_RECEIVED.tokens.length; i++)
+  {
+    var token_received = _WRAP_RECEIVED.tokens[i];
+    var newToken = new Token(null);
+
+    newToken._type.worth = token_received._type.worth;
+    newToken._type.lifespan = token_received._type.lifespan;
+    newToken._type.name = token_received._type.name;
+    newToken._type.color = token_received._type.color;
+
+    newToken._position = token_received._position;
+
+    _TOKEN_LIST.push(newToken);
+  }
+};
+
+/* End idle state *******************************************************************************************************/
+/************************************************************************************************************************/
+
+
 /* Server initialisation ************************************************************************************************/
 function handler (req, res) 
 {
@@ -27,6 +143,7 @@ function handler (req, res)
 var app = require('http').createServer(handler)
 var io = require('socket.io')(app);
 var fs = require('fs');
+
 
 /* To test when all connected players are ready */
 var all_ready = false;
@@ -38,26 +155,16 @@ var counter = null;
 /* To know if a game is run or not */
 var session = false;
 
-/* global server variable for store players and tokens */
-_PLAYER_LIST = [];
-_TOKEN_LIST = [];
 
 
-var _WRAP = {
-    players: _PLAYER_LIST,
-    tokens: _TOKEN_LIST
-}
-
-/* Tokens initialization */
-for(var i = 0; i < token_number; i++)
-{
-  var token = new Token(_WRAP);
-  _TOKEN_LIST.push(token);
-}
 
 app.listen(server_port);
 /* End server initialisation ********************************************************************************************/
 /************************************************************************************************************************/
+
+
+
+
 /* Connections handling *************************************************************************************************/
 io.on('connection', function (socket) 
 {
@@ -69,6 +176,14 @@ io.on('connection', function (socket)
   socket.on("client", function(name) 
   {
     console.log(name + " !");
+    for(var i=0; i<_WRAP.players.length;i++)
+    {
+      var player = _WRAP.players[i]
+      if(player._name==name){
+        client = player;
+        return;
+      }
+    }
     // We store the client's informations in _PLAYER_LIST
     client = new Player(name);
     // A snake is attributed to the new client
@@ -108,42 +223,49 @@ io.on('connection', function (socket)
     client = null;
   });
 });
+
+
 /* End Connections handling *********************************************************************************************/
 /************************************************************************************************************************/
 /* Update Game State and notify players *********************************************************************************/
-//toto = 0;
+toto = 0;
 updateState = function() 
 {
-  /*
-  toto++;
-  if(toto==40)
-  {
-    console.log("------------------------------------------------------------------------------------------------------");
-    console.log("Nombre joueurs: " + _PLAYER_LIST.length);
-    console.log("Nombre tokens: " + _TOKEN_LIST.length);
-    console.log("JOUEURS : "+JSON.stringify(_PLAYER_LIST) );
-    console.log("TOKENS : "+JSON.stringify(_TOKEN_LIST) );
-    toto = 0;
-  }
-  */
 
-  var nb_players = _PLAYER_LIST.length;
-  // update all players snake
-  for (var i = 0; i < nb_players; i++) 
+  if(startBackup)
   {
-    _PLAYER_LIST[i].moveSnake();
-  }
-  // Check all the collisions types
-  checkCollisions();
-  // send the list of all players to all players
-  if(_PLAYER_LIST.length>0)
-  {
-    var data = {
-      "players" : _PLAYER_LIST,
-      "tokens"  : _TOKEN_LIST
+    toto++;
+    if(toto==40)
+    {
+
+      console.log("------------------------------------------------------------------------------------------------------");
+      /*
+      console.log("Nombre joueurs: " + _WRAP..length);
+      console.log("Nombre tokens: " + _TOKEN_LIST.length);
+      console.log("JOUEURS : "+JSON.stringify(_PLAYER_LIST) );
+      console.log("TOKENS : "+JSON.stringify(_TOKEN_LIST) );
+      */
+      console.log(JSON.stringify(_WRAP) );
+      toto = 0;
     }
 
-    io.sockets.emit("update", data);
+    var nb_players = _PLAYER_LIST.length;
+    // update all players snake
+    for (var i = 0; i < nb_players; i++) 
+    {
+      _PLAYER_LIST[i].moveSnake();
+    }
+    // Check all the collisions types
+    checkCollisions();
+    // send the list of all players to all players
+    if(_PLAYER_LIST.length>0)
+    {
+      var data = {
+        "players" : _PLAYER_LIST,
+        "tokens"  : _TOKEN_LIST
+      }
+
+      io.sockets.emit("update", data);
     //check if at least 2 players are ready
 
     if(nb_players>1 && !all_ready)
@@ -173,6 +295,7 @@ updateState = function()
       }
     }
   }
+}
 };
 
 /**

@@ -12,7 +12,13 @@ module.exports = function Token(entities)
     // constructor
     function Token(entities) 
     {
-      this.init(entities);  
+      if(entities!=null)
+        this.init(entities);
+      else
+      {
+        this._type = new TOKEN_TYPE("SMALL");
+        this._position = [];
+      }    
     }
 
     /**

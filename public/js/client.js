@@ -5,7 +5,7 @@ $(document).ready( function()
   var client_timer = $("#timer");
   var game_timer = 0;
   var counter =null;
- 
+  var reconnect = false;
 
   //Canvas stuff
   canvas = $("#canvas");
@@ -141,11 +141,12 @@ $(document).ready( function()
   };
 
   // definition connection to the websocket
-  connection = function() 
+  connection = function(port) 
   {
-    server = io.connect(HOST+":"+PORT);
+    server = io.connect(HOST+":"+port);
     server.emit("client", client.name);
-
+    if(port==8091)
+      console.log("Reconnected !")
     server.on("update", function(entities) 
     {
       list_players = entities.players;
@@ -164,14 +165,21 @@ $(document).ready( function()
       client_timer.html("<span style=\"font-weight:bolder\">Le vainqueur est : "+winner+"</span>");
     });
 
-    server.on("disconnect", function(winner) 
+    server.on("disconnect", function() 
     {
-      client_timer.html("<span style=\"font-weight:bolder\">Disconnected !</span>");
+      client_timer.html("<span style=\"font-weight:bolder\">Main Server is Down !</span>");
+      console.log("Reconnecting ...")
+      server.disconnect();
+      reconnect = true;
+      connection(8091);
     });
   };
 
   // connection established
-  connection();
+  connection(PORT);
+
+  if(reconnect)
+    connection(8091);
 
   
   // return direction taken by the player.

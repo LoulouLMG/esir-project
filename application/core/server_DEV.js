@@ -59,6 +59,8 @@ app.listen(server_port);
 /* End server initialisation ********************************************************************************************/
 /************************************************************************************************************************/
 /* Connections handling *************************************************************************************************/
+//to know if the backup server is ready to be synchronisez with
+var slave_state = false;
 io.on('connection', function (socket) 
 {
   var client, snake; 
@@ -80,6 +82,12 @@ io.on('connection', function (socket)
     );
     client.setSnake(snake);
     _PLAYER_LIST.push(client);
+  });
+
+  socket.on("slave", function() 
+  {
+    console.log("Backup server connected.");
+    slave_state = true;
   });
 
   // when a client send his ready signal
@@ -111,21 +119,24 @@ io.on('connection', function (socket)
 /* End Connections handling *********************************************************************************************/
 /************************************************************************************************************************/
 /* Update Game State and notify players *********************************************************************************/
-//toto = 0;
+toto = 0;
 updateState = function() 
 {
-  /*
+  
   toto++;
   if(toto==40)
   {
     console.log("------------------------------------------------------------------------------------------------------");
+    /*
     console.log("Nombre joueurs: " + _PLAYER_LIST.length);
     console.log("Nombre tokens: " + _TOKEN_LIST.length);
     console.log("JOUEURS : "+JSON.stringify(_PLAYER_LIST) );
     console.log("TOKENS : "+JSON.stringify(_TOKEN_LIST) );
+    */
     toto = 0;
+    console.log(JSON.stringify(_WRAP) );
   }
-  */
+  
 
   var nb_players = _PLAYER_LIST.length;
   // update all players snake
@@ -173,6 +184,12 @@ updateState = function()
       }
     }
   }
+  if(slave_state)
+  {
+    //send all data to the backup server
+    io.sockets.emit("updateSlave", _WRAP);
+  }
+  //io.sockets.emit("updateSlave", _WRAP);
 };
 
 /**
